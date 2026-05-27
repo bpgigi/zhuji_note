@@ -29,7 +29,7 @@ android {
     }
 
     buildTypes {
-        debug { enableUnitTestCoverage = true; enableAndroidTestCoverage = true }
+        debug { enableUnitTestCoverage = false; enableAndroidTestCoverage = true }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -53,6 +53,15 @@ android {
         animationsDisabled = true
         unitTests.isIncludeAndroidResources = true
         unitTests.isReturnDefaultValues = true
+        unitTests.all {
+            it.systemProperty("file.encoding", "UTF-8")
+            it.systemProperty("sun.jnu.encoding", "UTF-8")
+            it.systemProperty("user.country", "US")
+            it.systemProperty("user.language", "en")
+            it.systemProperty("robolectric.dependency.repo.url", "https://maven.aliyun.com/repository/public")
+            it.systemProperty("robolectric.offline", "false")
+            it.jvmArgs("-Dfile.encoding=UTF-8")
+        }
     }
 }
 
@@ -144,7 +153,7 @@ val coverageExcludes = listOf(
 )
 
 afterEvaluate {
-    val unitTestTask = tasks.named<Test>("testDebugUnitTest").get()
+    val unitTestProvider = tasks.named<Test>("testDebugUnitTest")
     coverageStages.forEach { stage ->
         val capitalized = stage.replaceFirstChar { it.uppercaseChar() }
         val execFile = layout.buildDirectory.file("jacoco/test${capitalized}.exec")
@@ -152,9 +161,10 @@ afterEvaluate {
         val stageTest = tasks.register<Test>("test${capitalized}") {
             description = "Run $stage tests"
             group = "verification"
-            testClassesDirs = unitTestTask.testClassesDirs
-            classpath = unitTestTask.classpath
             useJUnit()
+            // Lazily inherit classpath / testClassesDirs from the AGP-provided unit test task
+            testClassesDirs = files(unitTestProvider.map { it.testClassesDirs })
+            classpath = files(unitTestProvider.map { it.classpath })
             filter { includeTestsMatching(coveragePackages.getValue(stage)) }
             extensions.configure(JacocoTaskExtension::class.java) {
                 destinationFile = execFile.get().asFile
