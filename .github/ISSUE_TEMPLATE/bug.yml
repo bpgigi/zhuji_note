@@ -1,0 +1,22 @@
+name: Bug 报告
+description: App / 构建 / 测试 出现的问题
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. ...
+        2. ...
+    validations: { required: true }
+  - type: textarea
+    attributes:
+      label: 期望与实际
+    validations: { required: true }
+  - type: input
+    attributes:
+      label: 设备 / AVD
+      placeholder: "Pixel 7 API 34 / 真机 Mate60 OneUI"
+  - type: textarea
+    attributes:
+      label: 日志 / 截图
