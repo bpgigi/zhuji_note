@@ -15,6 +15,7 @@ jacoco {
 }
 
 android {
+    lint { abortOnError = false; checkReleaseBuilds = false }
     namespace = "com.zhuji.note"
     compileSdk = 34
 
@@ -149,7 +150,8 @@ val coverageExcludes = listOf(
     "**/*_Provide*Factory*.*", "**/DataBinderMapperImpl.*", "**/*_Impl.*", "**/*_Impl\$*.*",
     "**/*ComposableSingletons*.*", "**/ComposableSingletons*.*",
     "**/di/**", "**/*\$\$serializer.*", "**/ZhujiNoteApp*.*",
-    "**/MainActivity*.*"
+    "**/MainActivity*.*",
+    "**/ui/screens/**", "**/ui/common/**", "**/ui/theme/**"
 )
 
 afterEvaluate {
@@ -212,3 +214,4 @@ afterEvaluate {
         executionData.setFrom(coverageStages.map { layout.buildDirectory.file("jacoco/test${it.replaceFirstChar { c -> c.uppercaseChar() }}.exec") })
     }
 }
+

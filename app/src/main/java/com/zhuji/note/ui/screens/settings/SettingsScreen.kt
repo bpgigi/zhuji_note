@@ -1,5 +1,6 @@
 package com.zhuji.note.ui.screens.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,33 +11,36 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SettingsBrightness
+import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -60,6 +64,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zhuji.note.data.local.preferences.ThemeMode
+import com.zhuji.note.ui.common.GradientProgressBar
+import com.zhuji.note.ui.common.TopLoadingLine
 import com.zhuji.note.ui.theme.Spacing
 import com.zhuji.note.ui.theme.ZhujiCornerTokens
 
@@ -67,22 +73,29 @@ import com.zhuji.note.ui.theme.ZhujiCornerTokens
 @Composable
 fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
-    var keyDraft by remember { mutableStateOf(state.keyDraft) }
+    val snack = remember { SnackbarHostState() }
+    var keyDraft by remember(state.savedKey) { mutableStateOf(state.savedKey) }
     var revealKey by remember { mutableStateOf(false) }
 
-    LaunchedEffect(state.keyDraft) {
-        if (keyDraft.isEmpty() && state.keyDraft.isNotEmpty()) keyDraft = state.keyDraft
+    LaunchedEffect(Unit) {
+        vm.toastsFlow.collect { msg -> snack.showSnackbar(msg) }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snack) },
         topBar = {
-            TopAppBar(
-                title = { Text("设置", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Outlined.ArrowBack, contentDescription = "返回") }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
-            )
+            Column {
+                TopAppBar(
+                    title = { Text("设置", style = MaterialTheme.typography.titleMedium) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "返回")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                )
+                TopLoadingLine(loading = state.verifying || state.refreshingBalance || state.refreshingModels)
+            }
         }
     ) { padding ->
         Column(
@@ -122,6 +135,7 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
                         AssistChip(
                             onClick = vm::refreshBalance,
                             label = { Text(state.balanceText) },
+                            leadingIcon = { Icon(Icons.Outlined.AccountBalanceWallet, null, modifier = Modifier.size(16.dp)) },
                             colors = AssistChipDefaults.assistChipColors(
                                 containerColor = MaterialTheme.colorScheme.tertiaryContainer
                             ),
@@ -131,7 +145,7 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
                 Spacer(Modifier.height(Spacing.xs))
                 OutlinedTextField(
                     value = keyDraft,
-                    onValueChange = { keyDraft = it },
+                    onValueChange = { keyDraft = it; vm.saveKeyDraft(it) },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("sk-...") },
                     singleLine = true,
@@ -142,25 +156,50 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
                         }
                     },
                     keyboardOptions = KeyboardOptions.Default,
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    ),
                 )
                 Spacer(Modifier.height(Spacing.xs))
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                GradientProgressBar(visible = state.verifying)
+                Spacer(Modifier.height(Spacing.xs))
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
                     Button(
-                        onClick = { vm.saveKey(keyDraft); vm.refreshModels(); vm.refreshBalance() },
+                        onClick = { vm.saveAndVerifyKey(keyDraft) },
+                        enabled = !state.verifying,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    ) { Text("保存并验证") }
-                    if (state.errorMessage != null) {
-                        Text(state.errorMessage!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    ) {
+                        if (state.verifying) {
+                            CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(16.dp), color = MaterialTheme.colorScheme.onPrimary)
+                            Spacer(Modifier.padding(start = Spacing.xs))
+                            Text("验证中…")
+                        } else {
+                            Icon(Icons.Outlined.VerifiedUser, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.padding(start = Spacing.xs))
+                            Text("保存并验证")
+                        }
                     }
+                    AssistChip(
+                        onClick = vm::refreshBalance,
+                        enabled = !state.refreshingBalance,
+                        label = { Text(if (state.refreshingBalance) "刷新中…" else "查询余额") },
+                        leadingIcon = { Icon(Icons.Outlined.Refresh, null, modifier = Modifier.size(16.dp)) },
+                    )
+                }
+                state.errorMessage?.let {
+                    Spacer(Modifier.height(Spacing.xs))
+                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
             }
             Spacer(Modifier.height(Spacing.sm))
             Card {
-                Text("模型", style = MaterialTheme.typography.titleMedium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("模型", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.weight(1f))
+                    AssistChip(
+                        onClick = vm::refreshModels,
+                        enabled = !state.refreshingModels,
+                        label = { Text(if (state.refreshingModels) "拉取中…" else "刷新模型") },
+                        leadingIcon = { Icon(Icons.Outlined.Refresh, null, modifier = Modifier.size(16.dp)) },
+                    )
+                }
                 Spacer(Modifier.height(Spacing.xs))
                 ModelSelector(state.modelOptions, state.model, vm::setModel)
             }
@@ -240,10 +279,10 @@ private fun ThemePill(label: String, icon: ImageVector, selected: Boolean, onCli
         shape = ZhujiCornerTokens.Chip,
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
         contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xxs)) {
-            Icon(icon, null)
+            Icon(icon, null, modifier = Modifier.size(16.dp))
             Spacer(Modifier.padding(start = Spacing.xxs))
             Text(label, style = MaterialTheme.typography.labelLarge)
         }

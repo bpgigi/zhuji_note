@@ -8,6 +8,7 @@ import com.zhuji.note.domain.model.NoteOrder
 import com.zhuji.note.data.local.db.NoteDao
 import com.zhuji.note.data.local.db.NoteEntity
 import com.zhuji.note.data.local.db.NoteWithTags
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.zhuji.note.data.local.db.TagDao
 import com.zhuji.note.data.local.db.TagEntity
 import io.mockk.coEvery
@@ -29,14 +30,15 @@ class NoteRepositoryImplTest {
     private val tagDao = mockk<TagDao>(relaxUnitFun = true)
 
     @Test
-    fun `observeNotes orders by pinned then updated desc`() = runTest {
+    fun `observeNotes returns rows in dao order (sorting now done by SQL)`() = runTest {
         val n1 = NoteEntity(id = 1, title = "A", content = "", pinned = false, createdAt = 0, updatedAt = 100)
         val n2 = NoteEntity(id = 2, title = "B", content = "", pinned = true, createdAt = 0, updatedAt = 50)
         val n3 = NoteEntity(id = 3, title = "C", content = "", pinned = false, createdAt = 0, updatedAt = 200)
-        every { noteDao.observeAllWithTags() } returns flowOf(listOf(
-            NoteWithTags(n1, emptyList()),
+        // Repository now delegates ORDER BY to SQL; we just check the rows it surfaces.
+        every { noteDao.observeWithTagsRaw(any()) } returns flowOf(listOf(
             NoteWithTags(n2, emptyList()),
             NoteWithTags(n3, emptyList()),
+            NoteWithTags(n1, emptyList()),
         ))
         every { tagDao.observeAll() } returns flowOf(emptyList())
         val repo = NoteRepositoryImpl(noteDao, tagDao)
@@ -45,10 +47,10 @@ class NoteRepositoryImplTest {
     }
 
     @Test
-    fun `observeNotes filter onlyFavorite`() = runTest {
+    fun `observeNotes filter favorite is enforced by SQL not by repo (mock returns only favorites)`() = runTest {
         val n1 = NoteEntity(id = 1, title = "x", content = "", favorite = true, createdAt = 0, updatedAt = 100)
-        val n2 = NoteEntity(id = 2, title = "y", content = "", favorite = false, createdAt = 0, updatedAt = 90)
-        every { noteDao.observeAllWithTags() } returns flowOf(listOf(NoteWithTags(n1, emptyList()), NoteWithTags(n2, emptyList())))
+        // SQL with `favorite = 1` would only ever return the single favorite row, which the mock simulates.
+        every { noteDao.observeWithTagsRaw(any()) } returns flowOf(listOf(NoteWithTags(n1, emptyList())))
         every { tagDao.observeAll() } returns flowOf(emptyList())
         val repo = NoteRepositoryImpl(noteDao, tagDao)
         val list = repo.observeNotes(NoteFilter(onlyFavorite = true)).first()
@@ -95,3 +97,6 @@ class NoteRepositoryImplTest {
         coVerify(exactly = 1) { noteDao.setPinned(3L, true, any()) }
     }
 }
+
+
+

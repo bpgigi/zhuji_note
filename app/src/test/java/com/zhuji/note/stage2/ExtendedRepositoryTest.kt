@@ -15,6 +15,7 @@ import com.zhuji.note.data.repository.NoteRepositoryImpl
 import com.zhuji.note.data.local.db.NoteDao
 import com.zhuji.note.data.local.db.NoteEntity
 import com.zhuji.note.data.local.db.NoteWithTags
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.zhuji.note.data.local.db.TagDao
 import com.zhuji.note.data.local.db.TagEntity
 import com.zhuji.note.domain.model.Note
@@ -55,14 +56,14 @@ class ExtendedRepositoryTest {
     private val tagDao = mockk<TagDao>(relaxUnitFun = true)
 
     @Test
-    fun `observeNotes order by title sorts case-insensitive`() = runTest {
+    fun `observeNotes order by title returns rows in dao order`() = runTest {
         val now = 0L
         val notes = listOf(
-            NoteWithTags(NoteEntity(id = 1, title = "Banana", content = "", createdAt = now, updatedAt = now), emptyList()),
             NoteWithTags(NoteEntity(id = 2, title = "apple", content = "", createdAt = now, updatedAt = now), emptyList()),
+            NoteWithTags(NoteEntity(id = 1, title = "Banana", content = "", createdAt = now, updatedAt = now), emptyList()),
             NoteWithTags(NoteEntity(id = 3, title = "cherry", content = "", createdAt = now, updatedAt = now), emptyList()),
         )
-        every { noteDao.observeAllWithTags() } returns flowOf(notes)
+        every { noteDao.observeWithTagsRaw(any()) } returns flowOf(notes)
         every { tagDao.observeAll() } returns flowOf(emptyList())
         val repo = NoteRepositoryImpl(noteDao, tagDao)
         val list = repo.observeNotes(NoteFilter(order = NoteOrder.Title)).first()
@@ -70,13 +71,13 @@ class ExtendedRepositoryTest {
     }
 
     @Test
-    fun `observeNotes order by word count desc`() = runTest {
+    fun `observeNotes order by word count desc passes through dao order`() = runTest {
         val notes = listOf(
-            NoteWithTags(NoteEntity(id = 1, title = "a", content = "", wordCount = 5, createdAt = 0, updatedAt = 0), emptyList()),
             NoteWithTags(NoteEntity(id = 2, title = "b", content = "", wordCount = 50, createdAt = 0, updatedAt = 0), emptyList()),
             NoteWithTags(NoteEntity(id = 3, title = "c", content = "", wordCount = 20, createdAt = 0, updatedAt = 0), emptyList()),
+            NoteWithTags(NoteEntity(id = 1, title = "a", content = "", wordCount = 5, createdAt = 0, updatedAt = 0), emptyList()),
         )
-        every { noteDao.observeAllWithTags() } returns flowOf(notes)
+        every { noteDao.observeWithTagsRaw(any()) } returns flowOf(notes)
         every { tagDao.observeAll() } returns flowOf(emptyList())
         val repo = NoteRepositoryImpl(noteDao, tagDao)
         val list = repo.observeNotes(NoteFilter(order = NoteOrder.WordCountDesc)).first()
@@ -90,7 +91,7 @@ class ExtendedRepositoryTest {
             NoteWithTags(NoteEntity(id = 1, title = "a", content = "", createdAt = 0, updatedAt = 0), listOf(tag1)),
             NoteWithTags(NoteEntity(id = 2, title = "b", content = "", createdAt = 0, updatedAt = 0), emptyList()),
         )
-        every { noteDao.observeAllWithTags() } returns flowOf(list)
+        every { noteDao.observeWithTagsRaw(any()) } returns flowOf(list)
         every { tagDao.observeAll() } returns flowOf(emptyList())
         val repo = NoteRepositoryImpl(noteDao, tagDao)
         val r = repo.observeNotes(NoteFilter(tagId = 5L)).first()
@@ -100,12 +101,14 @@ class ExtendedRepositoryTest {
     @Test
     fun `observeStats combines counts and tags`() = runTest {
         every { noteDao.countActive() } returns flowOf(3)
+        every { noteDao.countPinned() } returns flowOf(1)
+        every { noteDao.countFavorite() } returns flowOf(1)
         every { noteDao.sumWordCount() } returns flowOf(120)
         every { tagDao.observeAll() } returns flowOf(listOf(
             TagEntity(id = 1, name = "x", color = 0, createdAt = 0),
             TagEntity(id = 2, name = "y", color = 0, createdAt = 0),
         ))
-        every { noteDao.observeAllWithTags() } returns flowOf(listOf(
+        every { noteDao.observeWithTagsRaw(any()) } returns flowOf(listOf(
             NoteWithTags(NoteEntity(id = 1, title = "a", content = "", pinned = true, favorite = true, createdAt = 0, updatedAt = 0), emptyList()),
             NoteWithTags(NoteEntity(id = 2, title = "b", content = "", pinned = false, favorite = false, createdAt = 0, updatedAt = 0), emptyList()),
         ))
@@ -116,12 +119,10 @@ class ExtendedRepositoryTest {
 
     @Test
     fun `observeNotes search matches via dao`() = runTest {
-        val hits = listOf(
-            NoteEntity(id = 9, title = "Compose", content = "is fun", createdAt = 0, updatedAt = 0)
-        )
-        every { noteDao.search("Compose") } returns flowOf(hits)
-        every { noteDao.observeAllWithTags() } returns flowOf(listOf(
-            NoteWithTags(hits.first(), emptyList())
+        val hit = NoteEntity(id = 9, title = "Compose", content = "is fun", createdAt = 0, updatedAt = 0)
+        every { noteDao.searchLike("Compose") } returns flowOf(listOf(NoteWithTags(hit, emptyList())))
+        every { noteDao.observeWithTagsRaw(any()) } returns flowOf(listOf(
+            NoteWithTags(hit, emptyList())
         ))
         every { tagDao.observeAll() } returns flowOf(emptyList())
         val repo = NoteRepositoryImpl(noteDao, tagDao)
@@ -204,3 +205,7 @@ class PurgeUseCaseTest {
         coVerify { repo.purgeOldTrash(any()) }
     }
 }
+
+
+
+

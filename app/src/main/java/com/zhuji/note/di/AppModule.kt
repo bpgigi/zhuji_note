@@ -3,10 +3,14 @@ package com.zhuji.note.di
 import android.content.Context
 import androidx.room.Room
 import com.zhuji.note.ai.DeepSeekClient
+import com.zhuji.note.data.backup.BackupExporter
+import com.zhuji.note.data.backup.BackupImporter
 import com.zhuji.note.data.local.db.FolderDao
 import com.zhuji.note.data.local.db.NoteDao
 import com.zhuji.note.data.local.db.TagDao
 import com.zhuji.note.data.local.db.ZhujiDatabase
+import com.zhuji.note.data.local.preferences.EncryptedSecretStore
+import com.zhuji.note.data.local.preferences.SecretStore
 import com.zhuji.note.data.local.preferences.UserPreferencesDataStore
 import com.zhuji.note.data.repository.FolderRepositoryImpl
 import com.zhuji.note.data.repository.NoteRepositoryImpl
@@ -58,7 +62,14 @@ object AppModule {
         NoteRepositoryImpl(noteDao, tagDao)
 
     @Provides @Singleton
-    fun providePrefs(@ApplicationContext context: Context) = UserPreferencesDataStore(context)
+    fun provideSecretStore(@ApplicationContext context: Context): SecretStore = EncryptedSecretStore(context)
+
+    @Provides @Singleton
+    fun providePrefs(@ApplicationContext context: Context, secret: SecretStore): UserPreferencesDataStore =
+        UserPreferencesDataStore(context, secret)
+
+    @Provides @Singleton fun provideExporter(@ApplicationContext context: Context, repo: NoteRepository) = BackupExporter(context, repo)
+    @Provides @Singleton fun provideImporter(@ApplicationContext context: Context, repo: NoteRepository) = BackupImporter(context, repo)
 
     @Provides @Singleton
     fun provideJson(): Json = Json {
@@ -81,7 +92,6 @@ object AppModule {
     @Provides @Singleton
     fun provideAi(client: OkHttpClient, json: Json) = DeepSeekClient(client, json)
 
-    // UseCases
     @Provides fun provideGetNotes(repo: NoteRepository) = GetNotesUseCase(repo)
     @Provides fun provideGetNote(repo: NoteRepository) = GetNoteUseCase(repo)
     @Provides fun provideSaveNote(repo: NoteRepository) = SaveNoteUseCase(repo)

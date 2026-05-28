@@ -1,32 +1,48 @@
 package com.zhuji.note.ui.screens.edit
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Bolt
-import androidx.compose.material.icons.outlined.CleaningServices
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.FormatBold
+import androidx.compose.material.icons.outlined.FormatItalic
+import androidx.compose.material.icons.outlined.FormatListBulleted
+import androidx.compose.material.icons.outlined.FormatListNumbered
+import androidx.compose.material.icons.outlined.FormatQuote
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,13 +69,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.TextRange
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zhuji.note.ai.AiAction
+import com.zhuji.note.domain.util.MarkdownToolbar
+import com.zhuji.note.ui.common.Clipboard
+import com.zhuji.note.ui.common.GradientProgressBar
 import com.zhuji.note.ui.common.MarkdownView
+import com.zhuji.note.ui.common.TopLoadingLine
 import com.zhuji.note.ui.common.TypingDot
 import com.zhuji.note.ui.theme.Spacing
 import com.zhuji.note.ui.theme.ZhujiCornerTokens
@@ -71,7 +99,16 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, vm: EditViewModel = hiltViewMod
     val state by vm.state.collectAsStateWithLifecycle()
     val snackHost = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var aiOpen by remember { mutableStateOf(false) }
+
+    var titleField by remember(state.note.id) { mutableStateOf(TextFieldValue(state.note.title)) }
+    var bodyField by remember(state.note.id) { mutableStateOf(TextFieldValue(state.note.content)) }
+
+    LaunchedEffect(state.note.title, state.note.content) {
+        if (titleField.text != state.note.title) titleField = TextFieldValue(state.note.title, TextRange(state.note.title.length))
+        if (bodyField.text != state.note.content) bodyField = TextFieldValue(state.note.content, TextRange(state.note.content.length))
+    }
 
     LaunchedEffect(state.errorMessage) {
         state.errorMessage?.let { msg ->
@@ -79,25 +116,44 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, vm: EditViewModel = hiltViewMod
         }
     }
 
+    LaunchedEffect(state.saved) {
+        if (state.saved) scope.launch { snackHost.showSnackbar("已保存 ✓") }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackHost) },
         topBar = {
-            TopAppBar(
-                title = { Text(if (noteId == 0L) "新笔记" else "编辑", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        if (state.note.title.isNotBlank() || state.note.content.isNotBlank()) vm.save()
-                        onBack()
-                    }) { Icon(Icons.Outlined.ArrowBack, contentDescription = "返回") }
-                },
-                actions = {
-                    IconButton(onClick = vm::togglePinned) { Icon(Icons.Outlined.PushPin, null, tint = if (state.note.pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface) }
-                    IconButton(onClick = vm::toggleFavorite) { Icon(if (state.note.favorite) Icons.Outlined.Favorite else Icons.Outlined.FavoriteBorder, null, tint = if (state.note.favorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface) }
-                    IconButton(onClick = vm::togglePreview) { Icon(if (state.previewMode) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility, null) }
-                    IconButton(onClick = vm::save) { Icon(Icons.Outlined.Done, contentDescription = "保存", tint = if (state.saved) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface) }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
-            )
+            Column {
+                TopAppBar(
+                    title = { Text(if (noteId == 0L) "新笔记" else "编辑", style = MaterialTheme.typography.titleMedium) },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            vm.onTitle(titleField.text)
+                            vm.onContent(bodyField.text)
+                            if (titleField.text.isNotBlank() || bodyField.text.isNotBlank()) vm.save()
+                            onBack()
+                        }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "返回") }
+                    },
+                    actions = {
+                        IconButton(onClick = vm::togglePinned) {
+                            Icon(Icons.Outlined.PushPin, null, tint = if (state.note.pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                        }
+                        IconButton(onClick = vm::toggleFavorite) {
+                            Icon(if (state.note.favorite) Icons.Outlined.Favorite else Icons.Outlined.FavoriteBorder, null, tint = if (state.note.favorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                        }
+                        IconButton(onClick = vm::togglePreview) {
+                            Icon(if (state.previewMode) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility, null)
+                        }
+                        IconButton(onClick = {
+                            vm.onTitle(titleField.text); vm.onContent(bodyField.text); vm.save()
+                        }) {
+                            Icon(Icons.Outlined.Done, contentDescription = "保存", tint = if (state.saved) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                )
+                TopLoadingLine(loading = state.loading)
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -105,7 +161,8 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, vm: EditViewModel = hiltViewMod
                 shape = ZhujiCornerTokens.FAB,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-            ) { Icon(Icons.Outlined.AutoAwesome, contentDescription = "AI 助手") }
+                modifier = Modifier.semantics { contentDescription = "打开 AI 助手" }
+            ) { Icon(Icons.Outlined.AutoAwesome, contentDescription = null) }
         }
     ) { padding ->
         Column(
@@ -117,8 +174,8 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, vm: EditViewModel = hiltViewMod
         ) {
             Spacer(Modifier.height(Spacing.sm))
             OutlinedTextField(
-                value = state.note.title,
-                onValueChange = vm::onTitle,
+                value = titleField,
+                onValueChange = { titleField = it; vm.onTitle(it.text) },
                 placeholder = { Text("标题") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
@@ -130,7 +187,7 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, vm: EditViewModel = hiltViewMod
                     unfocusedIndicatorColor = Color.Transparent,
                 )
             )
-            Spacer(Modifier.height(Spacing.sm))
+            Spacer(Modifier.height(Spacing.xs))
             if (state.previewMode) {
                 Box(
                     Modifier
@@ -138,25 +195,47 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, vm: EditViewModel = hiltViewMod
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    MarkdownView(state.note.content.ifBlank { "_(还没有内容)_" })
+                    MarkdownView(bodyField.text.ifBlank { "_(还没有内容)_" })
                 }
             } else {
-                OutlinedTextField(
-                    value = state.note.content,
-                    onValueChange = vm::onContent,
-                    placeholder = { Text("写点什么吧… 支持 Markdown") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Default),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
+                Box(Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = bodyField,
+                        onValueChange = { bodyField = it; vm.onContent(it.text) },
+                        placeholder = { Text("写点什么吧… 支持 Markdown") },
+                        modifier = Modifier.fillMaxSize(),
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Default),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                        )
                     )
-                )
+                }
             }
+            // Markdown 工具栏
+            if (!state.previewMode) MarkdownToolbarRow(
+                onAction = { kind ->
+                    val sel = bodyField.selection
+                    val a = sel.start; val b = sel.end
+                    val (newText, range) = when (kind) {
+                        "h1" -> MarkdownToolbar.applyHeading(bodyField.text, a, b, 1)
+                        "h2" -> MarkdownToolbar.applyHeading(bodyField.text, a, b, 2)
+                        "bold" -> MarkdownToolbar.applyBold(bodyField.text, a, b)
+                        "italic" -> MarkdownToolbar.applyItalic(bodyField.text, a, b)
+                        "code" -> MarkdownToolbar.applyInlineCode(bodyField.text, a, b)
+                        "ul" -> MarkdownToolbar.applyBulletList(bodyField.text, a, b)
+                        "ol" -> MarkdownToolbar.applyNumberedList(bodyField.text, a, b)
+                        "check" -> MarkdownToolbar.applyChecklist(bodyField.text, a, b)
+                        "quote" -> MarkdownToolbar.applyQuote(bodyField.text, a, b)
+                        "link" -> MarkdownToolbar.applyLink(bodyField.text, a, b)
+                        else -> bodyField.text to (a..b)
+                    }
+                    bodyField = TextFieldValue(newText, TextRange(range.last))
+                    vm.onContent(newText)
+                }
+            )
             Surface(
                 tonalElevation = 1.dp,
                 color = MaterialTheme.colorScheme.surfaceVariant,
@@ -167,6 +246,15 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, vm: EditViewModel = hiltViewMod
                     Icon(Icons.Outlined.Bolt, null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.padding(start = Spacing.xs))
                     Text("${state.note.wordCount} 字 · ${if (state.saved) "已保存" else "未保存"}", style = MaterialTheme.typography.labelLarge)
+                    Spacer(Modifier.weight(1f))
+                    AssistChip(
+                        onClick = {
+                            Clipboard.copy(context, "笔记", bodyField.text)
+                            scope.launch { snackHost.showSnackbar("已复制到剪贴板") }
+                        },
+                        label = { Text("复制全文") },
+                        leadingIcon = { Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(18.dp)) },
+                    )
                 }
             }
         }
@@ -175,12 +263,60 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, vm: EditViewModel = hiltViewMod
             AiSheet(
                 state = state,
                 onClose = { aiOpen = false },
-                onAction = { action -> vm.runAi(action) },
+                onAction = { action -> vm.runAi(action, currentText = bodyField.text, currentTitle = titleField.text) },
                 onCancel = vm::cancelAi,
-                onApply = { vm.applyAiToContent(); aiOpen = false },
+                onApply = {
+                    val merged = if (bodyField.text.isBlank()) state.aiAnswer else "${bodyField.text}\n\n${state.aiAnswer}"
+                    bodyField = TextFieldValue(merged, TextRange(merged.length))
+                    vm.onContent(merged)
+                    vm.applyAiToContent()
+                    scope.launch { snackHost.showSnackbar("AI 答案已合并到笔记") }
+                    aiOpen = false
+                },
+                onCopy = {
+                    if (state.aiAnswer.isNotBlank()) {
+                        Clipboard.copy(context, "AI 输出", state.aiAnswer)
+                        scope.launch { snackHost.showSnackbar("已复制 AI 输出") }
+                    }
+                },
             )
         }
     }
+}
+
+@Composable
+private fun MarkdownToolbarRow(onAction: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(vertical = Spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
+    ) {
+        ToolItem("H1", Icons.Outlined.Title, onClick = { onAction("h1") })
+        ToolItem("H2", Icons.Outlined.Title, onClick = { onAction("h2") })
+        ToolItem("加粗", Icons.Outlined.FormatBold, onClick = { onAction("bold") })
+        ToolItem("斜体", Icons.Outlined.FormatItalic, onClick = { onAction("italic") })
+        ToolItem("代码", Icons.Outlined.Code, onClick = { onAction("code") })
+        ToolItem("列表", Icons.Outlined.FormatListBulleted, onClick = { onAction("ul") })
+        ToolItem("有序", Icons.Outlined.FormatListNumbered, onClick = { onAction("ol") })
+        ToolItem("待办", Icons.Outlined.Checklist, onClick = { onAction("check") })
+        ToolItem("引用", Icons.Outlined.FormatQuote, onClick = { onAction("quote") })
+        ToolItem("链接", Icons.Outlined.Link, onClick = { onAction("link") })
+    }
+}
+
+@Composable
+private fun ToolItem(label: String, icon: ImageVector, onClick: () -> Unit) {
+    AssistChip(
+        onClick = onClick,
+        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+        leadingIcon = { Icon(icon, null, modifier = Modifier.size(16.dp)) },
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+        shape = ZhujiCornerTokens.Chip,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -191,6 +327,7 @@ private fun AiSheet(
     onAction: (AiAction) -> Unit,
     onCancel: () -> Unit,
     onApply: () -> Unit,
+    onCopy: () -> Unit,
 ) {
     androidx.compose.material3.ModalBottomSheet(
         onDismissRequest = onClose,
@@ -205,6 +342,8 @@ private fun AiSheet(
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, null) }
             }
+            Spacer(Modifier.height(Spacing.xs))
+            GradientProgressBar(visible = state.aiStreaming)
             Spacer(Modifier.height(Spacing.sm))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 items(AiAction.values().toList()) { action ->
@@ -238,23 +377,32 @@ private fun AiSheet(
                 }
                 Spacer(Modifier.height(Spacing.md))
             }
-            if (state.aiAnswer.isNotBlank()) {
-                MarkdownView(state.aiAnswer)
-                Spacer(Modifier.height(Spacing.lg))
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                    AssistChip(onClick = onApply, label = { Text("应用到笔记") }, leadingIcon = { Icon(Icons.Outlined.Done, null) })
-                    AssistChip(onClick = onCancel, label = { Text("停止") }, leadingIcon = { Icon(Icons.Outlined.CleaningServices, null) })
+            AnimatedVisibility(state.aiAnswer.isNotBlank(), enter = fadeIn() + slideInVertically(), exit = fadeOut()) {
+                Column {
+                    MarkdownView(state.aiAnswer)
+                    Spacer(Modifier.height(Spacing.md))
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        AssistChip(onClick = onApply, label = { Text("应用到笔记") }, leadingIcon = { Icon(Icons.Outlined.Done, null) })
+                        AssistChip(onClick = onCopy, label = { Text("复制") }, leadingIcon = { Icon(Icons.Outlined.ContentCopy, null) })
+                        if (state.aiStreaming) {
+                            AssistChip(onClick = onCancel, label = { Text("停止") }, leadingIcon = { Icon(Icons.Outlined.Close, null) })
+                        }
+                    }
                 }
-            } else if (state.aiStreaming) {
+            }
+            if (state.aiAnswer.isBlank() && state.aiStreaming) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TypingDot()
                     Spacer(Modifier.padding(start = Spacing.xs))
                     Text("AI 正在生成…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            } else {
+            } else if (state.aiAnswer.isBlank() && !state.aiStreaming) {
                 Text("点击上方任一按钮，让 AI 帮你处理这条笔记。", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.height(Spacing.xxl))
         }
     }
 }
+
+
+

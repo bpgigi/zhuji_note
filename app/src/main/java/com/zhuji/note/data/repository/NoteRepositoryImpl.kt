@@ -1,5 +1,6 @@
 package com.zhuji.note.data.repository
 
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.zhuji.note.data.local.db.FolderDao
 import com.zhuji.note.data.local.db.FolderEntity
 import com.zhuji.note.data.local.db.NoteDao
@@ -27,26 +28,34 @@ class NoteRepositoryImpl(
 ) : NoteRepository {
 
     override fun observeNotes(filter: NoteFilter): Flow<List<Note>> {
-        val source = if (filter.query.isNotBlank()) noteDao.search(filter.query.trim()).asWithTagsLike(noteDao)
-        else noteDao.observeAllWithTags()
-        return source.map { list ->
-            list.asSequence()
-                .filter { if (filter.folderId != null) it.note.folderId == filter.folderId else true }
-                .filter { if (filter.tagId != null) it.tags.any { t -> t.id == filter.tagId } else true }
-                .filter { if (filter.onlyPinned) it.note.pinned else true }
-                .filter { if (filter.onlyFavorite) it.note.favorite else true }
-                .map { it.toDomain() }
-                .let { seq ->
-                    when (filter.order) {
-                        NoteOrder.UpdatedDesc -> seq.sortedWith(compareByDescending<Note> { it.pinned }.thenByDescending { it.updatedAt })
-                        NoteOrder.UpdatedAsc -> seq.sortedBy { it.updatedAt }
-                        NoteOrder.CreatedDesc -> seq.sortedByDescending { it.createdAt }
-                        NoteOrder.Title -> seq.sortedBy { it.title.lowercase() }
-                        NoteOrder.WordCountDesc -> seq.sortedByDescending { it.wordCount }
-                    }
-                }
-                .toList()
+        val sql = StringBuilder("SELECT * FROM notes WHERE deleted_at IS NULL AND archived = 0")
+        val args = mutableListOf<Any>()
+        if (filter.query.isNotBlank()) {
+            sql.append(" AND (LOWER(title) LIKE ? OR LOWER(content) LIKE ?)")
+            val q = "%${filter.query.lowercase().trim()}%"
+            args.add(q); args.add(q)
         }
+        if (filter.folderId != null) {
+            sql.append(" AND folder_id = ?")
+            args.add(filter.folderId)
+        }
+        if (filter.onlyPinned) sql.append(" AND pinned = 1")
+        if (filter.onlyFavorite) sql.append(" AND favorite = 1")
+        sql.append(
+            when (filter.order) {
+                NoteOrder.UpdatedDesc -> " ORDER BY pinned DESC, updated_at DESC"
+                NoteOrder.UpdatedAsc -> " ORDER BY pinned DESC, updated_at ASC"
+                NoteOrder.CreatedDesc -> " ORDER BY pinned DESC, created_at DESC"
+                NoteOrder.Title -> " ORDER BY pinned DESC, LOWER(title) ASC"
+                NoteOrder.WordCountDesc -> " ORDER BY pinned DESC, word_count DESC"
+            }
+        )
+        val raw = SimpleSQLiteQuery(sql.toString(), args.toTypedArray())
+        val source = noteDao.observeWithTagsRaw(raw)
+        val tagFiltered = if (filter.tagId != null) {
+            source.map { list -> list.filter { it.tags.any { t -> t.id == filter.tagId } } }
+        } else source
+        return tagFiltered.map { list -> list.map { it.toDomain() } }
     }
 
     override fun observeArchived(): Flow<List<Note>> = noteDao.observeArchived().map { list -> list.map { it.toDomain() } }
@@ -57,14 +66,15 @@ class NoteRepositoryImpl(
         noteDao.countActive(),
         noteDao.sumWordCount(),
         tagDao.observeAll(),
-        noteDao.observeAllWithTags(),
-    ) { count, words, tags, withTags ->
+        noteDao.countPinned(),
+        noteDao.countFavorite(),
+    ) { count, words, tags, pinned, favorite ->
         NoteStats(
             totalNotes = count,
             totalWords = words ?: 0,
             totalTags = tags.size,
-            pinnedCount = withTags.count { it.note.pinned },
-            favoriteCount = withTags.count { it.note.favorite },
+            pinnedCount = pinned ?: 0,
+            favoriteCount = favorite ?: 0,
         )
     }
 
@@ -73,7 +83,6 @@ class NoteRepositoryImpl(
         val entity = note.toEntity().copy(updatedAt = now, wordCount = wordCount(note.content))
         val id = if (note.id == 0L) noteDao.insert(entity.copy(createdAt = now))
         else { noteDao.update(entity); note.id }
-        // refresh tag links
         noteDao.clearCross(id)
         note.tagIds.forEach { tagId -> noteDao.insertCross(NoteTagCrossRef(id, tagId)) }
         return id
@@ -130,7 +139,7 @@ internal fun wordCount(text: String): Int {
 internal fun NoteEntity.toDomain(tagIds: List<Long> = emptyList()) = Note(
     id = id, title = title, content = content, color = color, pinned = pinned, favorite = favorite,
     archived = archived, deletedAt = deletedAt, reminderAt = reminderAt, folderId = folderId,
-    createdAt = createdAt, updatedAt = updatedAt, wordCount = wordCount, tagIds = tagIds
+    createdAt = createdAt, updatedAt = updatedAt, wordCount = wordCount, tagIds = tagIds,
 )
 
 internal fun NoteWithTags.toDomain() = note.toDomain(tags.map { it.id })
@@ -140,10 +149,3 @@ internal fun Note.toEntity() = NoteEntity(
     archived = archived, deletedAt = deletedAt, reminderAt = reminderAt, folderId = folderId,
     createdAt = createdAt, updatedAt = updatedAt, wordCount = wordCount,
 )
-
-// helper: search() returns NoteEntity not NoteWithTags; wrap into a flow of NoteWithTags by joining tags from observeAllWithTags
-private fun Flow<List<NoteEntity>>.asWithTagsLike(noteDao: NoteDao): Flow<List<NoteWithTags>> =
-    combine(this, noteDao.observeAllWithTags()) { hits, all ->
-        val tagsById = all.associateBy { it.note.id }
-        hits.map { e -> tagsById[e.id] ?: NoteWithTags(e, emptyList()) }
-    }

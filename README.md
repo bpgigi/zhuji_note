@@ -8,8 +8,8 @@
 ![Compose](https://img.shields.io/badge/Compose-BOM%202024.08.00-4285F4?logo=jetpackcompose&logoColor=white)
 ![minSdk](https://img.shields.io/badge/minSdk-24-lightgrey)
 ![targetSdk](https://img.shields.io/badge/targetSdk-34-lightgrey)
-![Tests](https://img.shields.io/badge/tests-104%2F104%20pass-success)
-![Coverage](https://img.shields.io/badge/coverage-LINE%2030%25%20%7C%20METHOD%2035%25-yellow)
+![Tests](https://img.shields.io/badge/tests-155%2F155%20pass-success)
+![Coverage](https://img.shields.io/badge/coverage-LINE%2025.8%25%20%7C%20METHOD%2032.4%25-yellow)
 
 ## 一、项目定位
 
@@ -30,12 +30,19 @@ ZhujiNote 是为 **MT2026 移动应用测试** 课程大作业设计的 Android 
 
 ### 笔记本身
 - 笔记 CRUD（Room + Hilt + Flow，状态实时刷新）
-- Markdown 编辑 / 预览（compose-markdown）
+- Markdown 编辑 / 预览（compose-markdown）+ 10 项工具栏（H1/H2/Bold/Italic/Code/Strike/BulletList/NumberedList/Checklist/Quote/Link/CodeBlock）
 - 标签多对多（`note_tag_cross`）+ 文件夹分组
-- 收藏 / 置顶 / 软删除回收站 / 30 天自动清理
-- 全文搜索（标题 + 正文 LIKE）+ 多种排序（更新时间 / 创建时间 / 标题 / 字数）
-- 统计页（笔记数、字数、标签数、置顶 / 收藏数）
+- 收藏 / 置顶 / 软删除回收站（SwipeToDismiss 还原/永久删除）/ 30 天自动清理
+- 全文搜索（FTS4 虚拟表 + LIKE 降级）+ 多种排序（更新时间 / 创建时间 / 标题 / 字数）
+- 统计页（笔记数、字数、标签数、置顶/收藏数 + Canvas 字数趋势折线图）
 - 提醒（AlarmManager + 通知通道）
+- 番茄钟专注写作模式（经典 25/5、短冲 15/3、深度 50/10）
+- 8 种笔记模板（空白/日记/会议/读书/待办/灵感/周报/康奈尔）+ 模板引擎（{{date}} 等变量）
+- 双向链接 [[note title]] 解析 + 跳转
+- 字数目标 + 写作连续天数追踪
+- 多选批量操作（长按进入选择模式 → 全选/批量标签/批量删除）
+- PressableScale 触感反馈动效
+- 导入/导出（SAF + BackupExporter JSON/Markdown/Zip）
 
 ### AI 助手（DeepSeek `deepseek-v4-flash`）
 | 入口 | 行为 |
@@ -145,9 +152,11 @@ adb shell am start -n com.zhuji.note/.MainActivity
 | Stage 1 (JUnit)        | 8.4%  |  3.1% | 12.4% | 14.6% |  9.7% |
 | Stage 2 (+MockK)       | 12.0% |  6.5% | 16.6% | 21.7% | 17.7% |
 | Stage 3 (+Robolectric) | 5.7%  |  0.0% |  6.9% |  9.5% |  3.4% |
-| **累积**                | **21.6%** | **9.2%** | **30.0%** | **34.8%** | **26.6%** |
+| **累积**                | **18.7%** | **7.4%** | **25.8%** | **32.4%** | **20.8%** |
 
-测试用例总数：**104**（Stage1 56 + Stage2 30 + Stage3 18），通过率 **100%**。
+测试用例总数：**155**（Stage1 88 + Stage2 49 + Stage3 18），通过率 **100%**。
+
+androidTest（Espresso + Compose UI Test）：**30** 用例（EditorE2E 10 + NavigationE2E 10 + NoteFlowE2E 10）。
 
 ## 七、CI/CD
 
@@ -182,7 +191,11 @@ java -Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true `
 - **M1** scaffold：Compose + Hilt + Room + DataStore + DeepSeek client + theme
 - **M2** 三阶段单测 + JaCoCo 覆盖率出报告
 - **M3** AVD 跑通 + 装 APK + 实时截图 + 更多测试与功能
-- **M4**（计划）Espresso 在 AVD 上跑通 + Jenkins 本地构建一次
+- **M4** AI 真功能跑通（NetworkOnMainThreadException 修复）+ Markdown 工具栏 + EncryptedPrefs + FTS
+- **M5** 测试 104/104 + AS 操作手册
+- **M6** AI Chat 多轮对话验证 + 翻译流式 + 暗色截图
+- **M7** 146 tests + Pomodoro + Templates + BiLink + MultiSelect + WritingGoal + Monkey/UIAutomator
+- **M8** 155 tests + 30 androidTest + Jenkins pipeline + lint fix + NoteFilter/TemplateEngine tests
 
 ## 九、致谢
 

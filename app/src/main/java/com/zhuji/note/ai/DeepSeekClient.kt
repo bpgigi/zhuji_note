@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -18,8 +19,8 @@ class DeepSeekClient(
 
     private fun apiKeyHeader(key: String) = "Bearer ${key.trim()}"
 
-    suspend fun listModels(apiKey: String): List<ModelEntry> {
-        if (apiKey.isBlank()) return DEFAULT_MODELS
+    suspend fun listModels(apiKey: String): List<ModelEntry> = withContext(Dispatchers.IO) {
+        if (apiKey.isBlank()) return@withContext DEFAULT_MODELS
         val req = Request.Builder()
             .url("$baseUrl/v1/models")
             .header("Authorization", apiKeyHeader(apiKey))
@@ -28,24 +29,24 @@ class DeepSeekClient(
         client.newCall(req).execute().use { resp ->
             if (!resp.isSuccessful) error("models http=${resp.code}")
             val body = resp.body?.string().orEmpty()
-            return json.decodeFromString(ModelList.serializer(), body).data
+            json.decodeFromString(ModelList.serializer(), body).data
         }
     }
 
-    suspend fun balance(apiKey: String): BalanceResponse? {
-        if (apiKey.isBlank()) return null
+    suspend fun balance(apiKey: String): BalanceResponse? = withContext(Dispatchers.IO) {
+        if (apiKey.isBlank()) return@withContext null
         val req = Request.Builder()
             .url("$baseUrl/user/balance")
             .header("Authorization", apiKeyHeader(apiKey))
             .get()
             .build()
         client.newCall(req).execute().use { resp ->
-            if (!resp.isSuccessful) return null
-            return json.decodeFromString(BalanceResponse.serializer(), resp.body?.string().orEmpty())
+            if (!resp.isSuccessful) return@withContext null
+            json.decodeFromString(BalanceResponse.serializer(), resp.body?.string().orEmpty())
         }
     }
 
-    suspend fun chat(apiKey: String, request: ChatRequest): ChatResponse {
+    suspend fun chat(apiKey: String, request: ChatRequest): ChatResponse = withContext(Dispatchers.IO) {
         require(apiKey.isNotBlank()) { "缺少 DeepSeek API Key，请在设置中填写。" }
         val payload = json.encodeToString(ChatRequest.serializer(), request.copy(stream = false))
         val req = Request.Builder()
@@ -56,7 +57,7 @@ class DeepSeekClient(
         client.newCall(req).execute().use { resp ->
             val body = resp.body?.string().orEmpty()
             if (!resp.isSuccessful) error("AI 调用失败 http=${resp.code} body=${body.take(180)}")
-            return json.decodeFromString(ChatResponse.serializer(), body)
+            json.decodeFromString(ChatResponse.serializer(), body)
         }
     }
 

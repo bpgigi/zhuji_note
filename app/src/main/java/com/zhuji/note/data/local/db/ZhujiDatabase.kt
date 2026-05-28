@@ -4,7 +4,13 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [NoteEntity::class, TagEntity::class, NoteTagCrossRef::class, FolderEntity::class],
+    entities = [
+        NoteEntity::class,
+        TagEntity::class,
+        NoteTagCrossRef::class,
+        FolderEntity::class,
+        NoteFts::class,
+    ],
     version = 1,
     exportSchema = false,
 )

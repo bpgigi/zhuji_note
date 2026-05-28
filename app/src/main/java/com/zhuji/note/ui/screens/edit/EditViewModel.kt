@@ -52,15 +52,22 @@ class EditViewModel @Inject constructor(
         if (noteId > 0L) {
             viewModelScope.launch {
                 runCatching { getNote(noteId).first() }.getOrNull()?.let { existing ->
-                    _state.update { it.copy(note = existing ?: Note(title = "", content = "")) }
+                    _state.update { it.copy(note = existing) }
                 }
             }
         }
     }
 
-    fun onTitle(title: String) = _state.update { it.copy(note = it.note.copy(title = title), saved = false) }
-    fun onContent(content: String) = _state.update { it.copy(note = it.note.copy(content = content), saved = false) }
+    fun onTitle(title: String) {
+        if (title == _state.value.note.title) return
+        _state.update { it.copy(note = it.note.copy(title = title), saved = false) }
+    }
+    fun onContent(content: String) {
+        if (content == _state.value.note.content) return
+        _state.update { it.copy(note = it.note.copy(content = content), saved = false) }
+    }
     fun togglePreview() = _state.update { it.copy(previewMode = !it.previewMode) }
+
     fun togglePinned() = viewModelScope.launch {
         val cur = _state.value.note
         if (cur.id == 0L) return@launch
@@ -75,31 +82,34 @@ class EditViewModel @Inject constructor(
     }
 
     fun save() = viewModelScope.launch {
-        _state.update { it.copy(loading = true, errorMessage = null) }
+        _state.update { it.copy(loading = true, errorMessage = null, saved = false) }
         val cur = _state.value.note
+        if (cur.title.isBlank() && cur.content.isBlank()) {
+            _state.update { it.copy(loading = false) }
+            return@launch
+        }
         saveNote(cur).onSuccess { id ->
             _state.update { it.copy(loading = false, saved = true, note = it.note.copy(id = id)) }
         }.onFailure { t ->
-            _state.update { it.copy(loading = false, errorMessage = t.message) }
+            _state.update { it.copy(loading = false, errorMessage = t.message ?: "保存失败") }
         }
     }
 
-    fun runAi(action: AiAction, extra: String = "") {
+    fun runAi(action: AiAction, currentText: String, currentTitle: String, extra: String = "") {
         aiJob?.cancel()
         aiJob = viewModelScope.launch {
             _state.update { it.copy(aiReasoning = "", aiAnswer = "", aiStreaming = true, errorMessage = null) }
             val p = prefs.flow.first()
             val key = p.deepseekKey
-            val model = p.deepseekModel
+            val model = p.deepseekModel.ifBlank { "deepseek-v4-flash" }
             if (key.isBlank()) {
-                _state.update { it.copy(aiStreaming = false, errorMessage = "请先在设置中填写 DeepSeek API Key。") }
+                _state.update { it.copy(aiStreaming = false, errorMessage = "请先在设置中填写 DeepSeek API Key") }
                 return@launch
             }
-            val cur = _state.value.note
             val userText = buildString {
-                appendLine("【笔记标题】${cur.title.ifBlank { "无标题" }}")
+                appendLine("【笔记标题】${currentTitle.ifBlank { "无标题" }}")
                 appendLine("【笔记正文】")
-                appendLine(cur.content.ifBlank { "(空)" })
+                appendLine(currentText.ifBlank { "(空)" })
                 if (extra.isNotBlank()) {
                     appendLine()
                     appendLine("【附加请求】")
@@ -116,20 +126,23 @@ class EditViewModel @Inject constructor(
                 maxTokens = 1024,
                 temperature = 0.6,
             )
-            ai.chatStream(key, req).collect { ev ->
-                when (ev) {
-                    is DeepSeekClient.StreamEvent.Reasoning ->
-                        _state.update { it.copy(aiReasoning = it.aiReasoning + ev.text) }
-                    is DeepSeekClient.StreamEvent.Token ->
-                        _state.update { it.copy(aiAnswer = it.aiAnswer + ev.text) }
-                    is DeepSeekClient.StreamEvent.Finish -> Unit
-                    is DeepSeekClient.StreamEvent.Error ->
-                        _state.update { it.copy(aiStreaming = false, errorMessage = ev.message) }
-                    DeepSeekClient.StreamEvent.Done ->
-                        _state.update { it.copy(aiStreaming = false) }
+            try {
+                ai.chatStream(key, req).collect { ev ->
+                    when (ev) {
+                        is DeepSeekClient.StreamEvent.Reasoning ->
+                            _state.update { it.copy(aiReasoning = it.aiReasoning + ev.text) }
+                        is DeepSeekClient.StreamEvent.Token ->
+                            _state.update { it.copy(aiAnswer = it.aiAnswer + ev.text) }
+                        is DeepSeekClient.StreamEvent.Finish -> Unit
+                        is DeepSeekClient.StreamEvent.Error ->
+                            _state.update { it.copy(aiStreaming = false, errorMessage = "AI 出错：${ev.message}") }
+                        DeepSeekClient.StreamEvent.Done ->
+                            _state.update { it.copy(aiStreaming = false) }
+                    }
                 }
+            } finally {
+                _state.update { it.copy(aiStreaming = false) }
             }
-            _state.update { it.copy(aiStreaming = false) }
         }
     }
 

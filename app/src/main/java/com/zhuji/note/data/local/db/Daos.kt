@@ -5,12 +5,22 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
 import androidx.room.Transaction
 import androidx.room.Update
+import androidx.sqlite.db.SupportSQLiteQuery
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NoteDao {
+
+    @Transaction
+    @Query("SELECT * FROM notes WHERE deleted_at IS NULL AND archived = 0 ORDER BY pinned DESC, updated_at DESC")
+    fun observeAllWithTags(): Flow<List<NoteWithTags>>
+
+    @Transaction
+    @RawQuery(observedEntities = [NoteEntity::class, TagEntity::class, NoteTagCrossRef::class])
+    fun observeWithTagsRaw(query: SupportSQLiteQuery): Flow<List<NoteWithTags>>
 
     @Query("SELECT * FROM notes WHERE deleted_at IS NULL AND archived = 0 ORDER BY pinned DESC, updated_at DESC")
     fun observeAll(): Flow<List<NoteEntity>>
@@ -21,20 +31,32 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC")
     fun observeTrash(): Flow<List<NoteEntity>>
 
+    @Transaction
     @Query("SELECT * FROM notes WHERE id = :id LIMIT 1")
-    fun observeById(id: Long): Flow<NoteEntity?>
+    fun observeWithTags(id: Long): Flow<NoteWithTags?>
 
     @Query("SELECT * FROM notes WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): NoteEntity?
 
+    @Transaction
+    @Query("""
+        SELECT notes.* FROM notes
+        JOIN notes_fts ON notes.id = notes_fts.docid
+        WHERE notes_fts MATCH :match
+          AND notes.deleted_at IS NULL AND notes.archived = 0
+        ORDER BY notes.pinned DESC, notes.updated_at DESC
+    """)
+    fun searchFts(match: String): Flow<List<NoteWithTags>>
+
+    @Transaction
     @Query("""
         SELECT * FROM notes
         WHERE deleted_at IS NULL AND archived = 0
-        AND (LOWER(title) LIKE '%' || LOWER(:q) || '%'
-          OR LOWER(content) LIKE '%' || LOWER(:q) || '%')
+          AND (LOWER(title) LIKE '%' || LOWER(:q) || '%'
+            OR LOWER(content) LIKE '%' || LOWER(:q) || '%')
         ORDER BY pinned DESC, updated_at DESC
     """)
-    fun search(q: String): Flow<List<NoteEntity>>
+    fun searchLike(q: String): Flow<List<NoteWithTags>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(note: NoteEntity): Long
@@ -72,13 +94,11 @@ interface NoteDao {
     @Query("SELECT SUM(word_count) FROM notes WHERE deleted_at IS NULL")
     fun sumWordCount(): Flow<Int?>
 
-    @Transaction
-    @Query("SELECT * FROM notes WHERE deleted_at IS NULL AND archived = 0 ORDER BY pinned DESC, updated_at DESC")
-    fun observeAllWithTags(): Flow<List<NoteWithTags>>
+    @Query("SELECT SUM(CASE WHEN pinned = 1 THEN 1 ELSE 0 END) FROM notes WHERE deleted_at IS NULL")
+    fun countPinned(): Flow<Int?>
 
-    @Transaction
-    @Query("SELECT * FROM notes WHERE id = :id LIMIT 1")
-    fun observeWithTags(id: Long): Flow<NoteWithTags?>
+    @Query("SELECT SUM(CASE WHEN favorite = 1 THEN 1 ELSE 0 END) FROM notes WHERE deleted_at IS NULL")
+    fun countFavorite(): Flow<Int?>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertCross(ref: NoteTagCrossRef)
@@ -109,6 +129,9 @@ interface TagDao {
 
     @Query("SELECT * FROM tags WHERE name = :name LIMIT 1")
     suspend fun getByName(name: String): TagEntity?
+
+    @Query("SELECT COUNT(*) FROM note_tag_cross WHERE tag_id = :tagId")
+    fun usageCount(tagId: Long): Flow<Int>
 }
 
 @Dao
@@ -124,4 +147,7 @@ interface FolderDao {
 
     @Query("DELETE FROM folders WHERE id = :id")
     suspend fun delete(id: Long)
+
+    @Query("SELECT * FROM folders WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Long): FolderEntity?
 }

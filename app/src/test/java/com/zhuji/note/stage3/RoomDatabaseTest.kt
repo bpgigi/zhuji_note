@@ -74,8 +74,8 @@ class RoomDatabaseTest {
         val now = System.currentTimeMillis()
         db.noteDao().insert(NoteEntity(title = "Compose", content = "is fun", createdAt = now, updatedAt = now))
         db.noteDao().insert(NoteEntity(title = "Java", content = "boring", createdAt = now, updatedAt = now))
-        val hits = db.noteDao().search("Compose").first()
-        assertThat(hits.map { it.title }).containsExactly("Compose")
+        val hits = db.noteDao().searchLike("Compose").first()
+        assertThat(hits.map { it.note.title }).containsExactly("Compose")
     }
 
     @Test
@@ -87,3 +87,4 @@ class RoomDatabaseTest {
         assertThat(db.noteDao().sumWordCount().first()).isEqualTo(8)
     }
 }
+

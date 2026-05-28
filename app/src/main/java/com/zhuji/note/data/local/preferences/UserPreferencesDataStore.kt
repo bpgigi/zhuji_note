@@ -23,13 +23,17 @@ data class UserPrefs(
     val font: String = "Inter",
     val accentNeon: Boolean = false,
     val firstRun: Boolean = true,
+    val fontScale: Int = 0,
 )
 
-class UserPreferencesDataStore(private val context: Context) {
+class UserPreferencesDataStore(
+    private val context: Context,
+    private val secret: SecretStore,
+) {
+    constructor(context: Context) : this(context, EncryptedSecretStore(context))
 
     private val K_THEME = stringPreferencesKey("theme")
     private val K_DYNAMIC = booleanPreferencesKey("dynamic_color")
-    private val K_KEY = stringPreferencesKey("deepseek_key")
     private val K_MODEL = stringPreferencesKey("deepseek_model")
     private val K_FONT = stringPreferencesKey("font")
     private val K_NEON = booleanPreferencesKey("accent_neon")
@@ -40,11 +44,12 @@ class UserPreferencesDataStore(private val context: Context) {
         UserPrefs(
             theme = runCatching { ThemeMode.valueOf(p[K_THEME] ?: ThemeMode.System.name) }.getOrDefault(ThemeMode.System),
             dynamicColor = p[K_DYNAMIC] ?: false,
-            deepseekKey = p[K_KEY] ?: "",
+            deepseekKey = secret.getDeepSeekKey(),
             deepseekModel = p[K_MODEL] ?: "deepseek-v4-flash",
             font = p[K_FONT] ?: "Inter",
             accentNeon = p[K_NEON] ?: false,
             firstRun = p[K_FIRST] ?: true,
+            fontScale = p[K_FONT_SCALE] ?: 0,
         )
     }
 
@@ -53,7 +58,7 @@ class UserPreferencesDataStore(private val context: Context) {
     suspend fun setTheme(mode: ThemeMode) = context.dataStore.edit { it[K_THEME] = mode.name }
     suspend fun setDynamic(on: Boolean) = context.dataStore.edit { it[K_DYNAMIC] = on }
     suspend fun setNeon(on: Boolean) = context.dataStore.edit { it[K_NEON] = on }
-    suspend fun setKey(key: String) = context.dataStore.edit { it[K_KEY] = key.trim() }
+    suspend fun setKey(key: String) { secret.setDeepSeekKey(key) }
     suspend fun setModel(model: String) = context.dataStore.edit { it[K_MODEL] = model }
     suspend fun setFont(font: String) = context.dataStore.edit { it[K_FONT] = font }
     suspend fun setFontScale(delta: Int) = context.dataStore.edit { it[K_FONT_SCALE] = delta }

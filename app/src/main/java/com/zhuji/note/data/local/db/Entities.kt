@@ -1,10 +1,14 @@
 package com.zhuji.note.data.local.db
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Fts4
 import androidx.room.Index
+import androidx.room.Junction
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 
 @Entity(tableName = "notes")
 data class NoteEntity(
@@ -52,4 +56,11 @@ data class FolderEntity(
     val emoji: String,
     @ColumnInfo(name = "sort_order") val sortOrder: Int,
     @ColumnInfo(name = "created_at") val createdAt: Long,
+)
+
+@Entity(tableName = "notes_fts")
+@Fts4(contentEntity = NoteEntity::class)
+data class NoteFts(
+    @ColumnInfo(name = "title") val title: String,
+    @ColumnInfo(name = "content") val content: String,
 )
