@@ -43,38 +43,38 @@ class EditorE2ETest {
     @Test fun editorContentInput() {
         composeRule.onNodeWithContentDescription("新笔记").performClick()
         composeRule.onNode(hasText("标题")).performTextInput("T")
-        composeRule.onNode(hasText("开始写作")).performTextInput("Hello World")
+        composeRule.onNode(hasText("写点什么吧", substring = true)).performTextInput("Hello World")
         composeRule.onNodeWithText("Hello World").assertIsDisplayed()
     }
 
     @Test fun editorBoldButton() {
         composeRule.onNodeWithContentDescription("新笔记").performClick()
-        composeRule.onNodeWithText("B", substring = false).performClick()
+        composeRule.onNodeWithText("加粗").performClick()
     }
 
     @Test fun editorItalicButton() {
         composeRule.onNodeWithContentDescription("新笔记").performClick()
-        composeRule.onNodeWithText("I", substring = false).performClick()
+        composeRule.onNodeWithText("斜体").performClick()
     }
 
     @Test fun editorCodeButton() {
         composeRule.onNodeWithContentDescription("新笔记").performClick()
-        composeRule.onNodeWithText("</>").performClick()
+        composeRule.onNodeWithText("代码").performClick()
     }
 
     @Test fun editorAiFabOpensSheet() {
         composeRule.onNodeWithContentDescription("新笔记").performClick()
         composeRule.onNode(hasText("标题")).performTextInput("Test")
-        composeRule.onNode(hasText("开始写作")).performTextInput("Some content for AI")
-        composeRule.onNodeWithContentDescription("AI 助手").performClick()
+        composeRule.onNode(hasText("写点什么吧", substring = true)).performTextInput("Some content for AI")
+        composeRule.onNodeWithContentDescription("打开 AI 助手").performClick()
         composeRule.onNodeWithText("助记 AI", substring = true).assertIsDisplayed()
     }
 
     @Test fun editorAiSheetShowsActions() {
         composeRule.onNodeWithContentDescription("新笔记").performClick()
         composeRule.onNode(hasText("标题")).performTextInput("T")
-        composeRule.onNode(hasText("开始写作")).performTextInput("Content")
-        composeRule.onNodeWithContentDescription("AI 助手").performClick()
+        composeRule.onNode(hasText("写点什么吧", substring = true)).performTextInput("Content")
+        composeRule.onNodeWithContentDescription("打开 AI 助手").performClick()
         composeRule.onNodeWithText("总结").assertIsDisplayed()
         composeRule.onNodeWithText("续写").assertIsDisplayed()
         composeRule.onNodeWithText("润色").assertIsDisplayed()
@@ -83,6 +83,6 @@ class EditorE2ETest {
     @Test fun editorBackNavigates() {
         composeRule.onNodeWithContentDescription("新笔记").performClick()
         composeRule.onNodeWithContentDescription("返回").performClick()
-        composeRule.onNodeWithText("助记").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("新笔记").assertIsDisplayed()
     }
 }

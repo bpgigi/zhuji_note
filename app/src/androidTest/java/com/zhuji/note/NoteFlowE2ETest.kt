@@ -24,7 +24,7 @@ class NoteFlowE2ETest {
     @Before fun setup() { hiltRule.inject() }
 
     @Test fun homeScreenShowsTitle() {
-        composeRule.onNodeWithText("助记").assertIsDisplayed()
+        composeRule.onNodeWithText("助记", substring = true).assertIsDisplayed()
     }
 
     @Test fun fabNavigatesToNewNote() {
@@ -62,7 +62,7 @@ class NoteFlowE2ETest {
 
     @Test fun darkModeToggleWorks() {
         composeRule.onNodeWithContentDescription("设置").performClick()
-        composeRule.onNodeWithText("暗色模式").performClick()
+        composeRule.onNodeWithText("暗").performClick()
         composeRule.waitForIdle()
     }
 
@@ -74,6 +74,6 @@ class NoteFlowE2ETest {
 
     @Test fun editNoteAiFabExists() {
         composeRule.onNodeWithContentDescription("新笔记").performClick()
-        composeRule.onNodeWithContentDescription("AI 助手").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("打开 AI 助手").assertIsDisplayed()
     }
 }

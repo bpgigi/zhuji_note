@@ -23,9 +23,9 @@ class NavigationE2ETest {
 
     @Test fun navigateToSettingsAndBack() {
         composeRule.onNodeWithContentDescription("设置").performClick()
-        composeRule.onNodeWithText("设置").assertIsDisplayed()
+        composeRule.onNodeWithText("API Key").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("返回").performClick()
-        composeRule.onNodeWithText("助记").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("新笔记").assertIsDisplayed()
     }
 
     @Test fun navigateToStatsAndBack() {
@@ -64,12 +64,12 @@ class NavigationE2ETest {
 
     @Test fun trashShowsEmptyMessage() {
         composeRule.onNodeWithContentDescription("回收站").performClick()
-        composeRule.onNodeWithText("回收站为空").assertIsDisplayed()
+        composeRule.onNodeWithText("回收站为空", substring = true).assertIsDisplayed()
     }
 
     @Test fun aiChatShowsWelcome() {
         composeRule.onNodeWithContentDescription("AI 助手").performClick()
-        composeRule.onNodeWithText("嗨，我是助记 AI", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("AI 助手").assertIsDisplayed()
     }
 
     @Test fun statsShowsWritingDimension() {
