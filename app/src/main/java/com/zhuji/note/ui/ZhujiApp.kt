@@ -1,6 +1,9 @@
 package com.zhuji.note.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -28,6 +31,7 @@ sealed class Routes(val path: String) {
     data object Pomodoro : Routes("pomodoro")
     data object Goal : Routes("goal")
     data object Template : Routes("template")
+    data object MultiSelect : Routes("multiselect")
 }
 
 @Composable
@@ -45,6 +49,7 @@ fun ZhujiApp() {
                 onPomodoro = { nav.navigate(Routes.Pomodoro.path) },
                 onGoal = { nav.navigate(Routes.Goal.path) },
                 onTemplate = { nav.navigate(Routes.Template.path) },
+                onMultiSelect = { nav.navigate(Routes.MultiSelect.path) },
             )
         }
         composable(
@@ -82,6 +87,17 @@ fun ZhujiApp() {
                     nav.popBackStack()
                     nav.navigate(Routes.Edit.build(0L, tpl.id))
                 },
+            )
+        }
+        composable(Routes.MultiSelect.path) {
+            val vm: com.zhuji.note.ui.screens.notes.NotesViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            val state by vm.state.collectAsStateWithLifecycle()
+            com.zhuji.note.ui.screens.notes.MultiSelectNoteList(
+                notes = state.notes,
+                onNoteClick = { id -> nav.navigate(Routes.Edit.build(id)) },
+                onBatchDelete = { ids -> vm.batchDelete(ids) },
+                onBatchTag = { },
+                onNewNote = { nav.navigate(Routes.Edit.build(0L)) },
             )
         }
     }

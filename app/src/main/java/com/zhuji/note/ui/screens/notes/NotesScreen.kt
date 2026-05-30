@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Favorite
@@ -95,6 +96,7 @@ fun NotesScreen(
     onPomodoro: () -> Unit = {},
     onGoal: () -> Unit = {},
     onTemplate: () -> Unit = {},
+    onMultiSelect: () -> Unit = {},
     vm: NotesViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -133,6 +135,7 @@ fun NotesScreen(
                     onPomodoro = onPomodoro,
                     onGoal = onGoal,
                     onTemplate = onTemplate,
+                    onMultiSelect = onMultiSelect,
                 )
                 DropdownMenu(expanded = orderMenu, onDismissRequest = { orderMenu = false }) {
                     NoteOrder.values().forEach { o ->
@@ -181,6 +184,7 @@ private fun TopBar(
     onPomodoro: () -> Unit,
     onGoal: () -> Unit,
     onTemplate: () -> Unit,
+    onMultiSelect: () -> Unit,
 ) {
     var moreMenu by remember { mutableStateOf(false) }
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -199,6 +203,11 @@ private fun TopBar(
                     text = { Text("从模板新建") },
                     leadingIcon = { Icon(Icons.Outlined.Dashboard, null) },
                     onClick = { moreMenu = false; onTemplate() },
+                )
+                DropdownMenuItem(
+                    text = { Text("批量管理") },
+                    leadingIcon = { Icon(Icons.Outlined.Checklist, null) },
+                    onClick = { moreMenu = false; onMultiSelect() },
                 )
                 DropdownMenuItem(
                     text = { Text("番茄钟") },

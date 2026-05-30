@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Psychology
@@ -249,6 +250,10 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, onOpenSettings: () -> Unit = {}
                         "check" -> MarkdownToolbar.applyChecklist(bodyField.text, a, b)
                         "quote" -> MarkdownToolbar.applyQuote(bodyField.text, a, b)
                         "link" -> MarkdownToolbar.applyLink(bodyField.text, a, b)
+                        "bilink" -> {
+                            val (txt, pos) = com.zhuji.note.domain.util.BiLinkParser.insertLink(bodyField.text, a, "")
+                            txt to (pos..pos)
+                        }
                         else -> bodyField.text to (a..b)
                     }
                     bodyField = TextFieldValue(newText, TextRange(range.last))
@@ -326,6 +331,7 @@ private fun MarkdownToolbarRow(onAction: (String) -> Unit) {
         ToolItem("待办", Icons.Outlined.Checklist, onClick = { onAction("check") })
         ToolItem("引用", Icons.Outlined.FormatQuote, onClick = { onAction("quote") })
         ToolItem("链接", Icons.Outlined.Link, onClick = { onAction("link") })
+        ToolItem("双链", Icons.Outlined.Hub, onClick = { onAction("bilink") })
     }
 }
 

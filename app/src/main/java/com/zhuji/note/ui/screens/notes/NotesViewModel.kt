@@ -76,4 +76,5 @@ class NotesViewModel @Inject constructor(
     fun togglePinned(id: Long, on: Boolean) = viewModelScope.launch { toggle(id, ToggleFlagsUseCase.Flag.Pinned, on) }
     fun toggleFavorite(id: Long, on: Boolean) = viewModelScope.launch { toggle(id, ToggleFlagsUseCase.Flag.Favorite, on) }
     fun softDelete(id: Long) = viewModelScope.launch { deleteNote(id) }
+    fun batchDelete(ids: List<Long>) = viewModelScope.launch { ids.forEach { deleteNote(it) } }
 }
