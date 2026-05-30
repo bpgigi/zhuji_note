@@ -29,10 +29,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
@@ -88,6 +92,9 @@ fun NotesScreen(
     onStats: () -> Unit,
     onTrash: () -> Unit,
     onAi: () -> Unit,
+    onPomodoro: () -> Unit = {},
+    onGoal: () -> Unit = {},
+    onTemplate: () -> Unit = {},
     vm: NotesViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -123,6 +130,9 @@ fun NotesScreen(
                     onTrash = onTrash,
                     onSettings = onSettings,
                     onSort = { orderMenu = true },
+                    onPomodoro = onPomodoro,
+                    onGoal = onGoal,
+                    onTemplate = onTemplate,
                 )
                 DropdownMenu(expanded = orderMenu, onDismissRequest = { orderMenu = false }) {
                     NoteOrder.values().forEach { o ->
@@ -168,7 +178,11 @@ private fun TopBar(
     onTrash: () -> Unit,
     onSettings: () -> Unit,
     onSort: () -> Unit,
+    onPomodoro: () -> Unit,
+    onGoal: () -> Unit,
+    onTemplate: () -> Unit,
 ) {
+    var moreMenu by remember { mutableStateOf(false) }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
@@ -177,8 +191,32 @@ private fun TopBar(
         IconButton(onClick = onSort) { Icon(Icons.Outlined.Sort, contentDescription = "排序") }
         IconButton(onClick = onAi) { Icon(Icons.Outlined.AutoAwesome, contentDescription = "AI 助手", tint = MaterialTheme.colorScheme.primary) }
         IconButton(onClick = onStats) { Icon(Icons.Outlined.Insights, contentDescription = "统计") }
-        IconButton(onClick = onTrash) { Icon(Icons.Outlined.Delete, contentDescription = "回收站") }
         IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, contentDescription = "设置") }
+        Box {
+            IconButton(onClick = { moreMenu = true }) { Icon(Icons.Outlined.MoreVert, contentDescription = "更多") }
+            DropdownMenu(expanded = moreMenu, onDismissRequest = { moreMenu = false }) {
+                DropdownMenuItem(
+                    text = { Text("从模板新建") },
+                    leadingIcon = { Icon(Icons.Outlined.Dashboard, null) },
+                    onClick = { moreMenu = false; onTemplate() },
+                )
+                DropdownMenuItem(
+                    text = { Text("番茄钟") },
+                    leadingIcon = { Icon(Icons.Outlined.Timer, null) },
+                    onClick = { moreMenu = false; onPomodoro() },
+                )
+                DropdownMenuItem(
+                    text = { Text("写作目标") },
+                    leadingIcon = { Icon(Icons.Outlined.TrendingUp, null) },
+                    onClick = { moreMenu = false; onGoal() },
+                )
+                DropdownMenuItem(
+                    text = { Text("回收站") },
+                    leadingIcon = { Icon(Icons.Outlined.Delete, null) },
+                    onClick = { moreMenu = false; onTrash() },
+                )
+            }
+        }
     }
 }
 

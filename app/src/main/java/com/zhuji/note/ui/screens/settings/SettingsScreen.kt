@@ -21,6 +21,9 @@ import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Backup
+import androidx.compose.material.icons.outlined.Upload
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Refresh
@@ -76,6 +79,13 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
     val snack = remember { SnackbarHostState() }
     var keyDraft by remember(state.savedKey) { mutableStateOf(state.savedKey) }
     var revealKey by remember { mutableStateOf(false) }
+
+    val exportLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri -> uri?.let { vm.exportZip(it) } }
+    val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri -> uri?.let { vm.importMarkdown(it) } }
 
     LaunchedEffect(Unit) {
         vm.toastsFlow.collect { msg -> snack.showSnackbar(msg) }
@@ -202,6 +212,34 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
                 }
                 Spacer(Modifier.height(Spacing.xs))
                 ModelSelector(state.modelOptions, state.model, vm::setModel)
+            }
+
+            Spacer(Modifier.height(Spacing.lg))
+            SectionTitle("数据备份")
+            Card {
+                Column(Modifier.padding(Spacing.md)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.Backup, null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.padding(start = Spacing.sm))
+                        Column(Modifier.weight(1f)) {
+                            Text("导出与导入", style = MaterialTheme.typography.titleMedium)
+                            Text("导出全部笔记为 ZIP，或从 Markdown 文件导入", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    Spacer(Modifier.height(Spacing.sm))
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        AssistChip(
+                            onClick = { exportLauncher.launch("zhuji_backup.zip") },
+                            label = { Text("导出 ZIP") },
+                            leadingIcon = { Icon(Icons.Outlined.Upload, null) },
+                        )
+                        AssistChip(
+                            onClick = { importLauncher.launch(arrayOf("text/markdown", "text/plain", "*/*")) },
+                            label = { Text("导入 Markdown") },
+                            leadingIcon = { Icon(Icons.Outlined.Download, null) },
+                        )
+                    }
+                }
             }
 
             Spacer(Modifier.height(Spacing.lg))

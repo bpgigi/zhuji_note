@@ -38,6 +38,8 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val prefs: UserPreferencesDataStore,
     private val ai: DeepSeekClient,
+    private val exporter: com.zhuji.note.data.backup.BackupExporter,
+    private val importer: com.zhuji.note.data.backup.BackupImporter,
 ) : ViewModel() {
 
     private val extraState = MutableStateFlow(SettingsUiState())
@@ -71,6 +73,18 @@ class SettingsViewModel @Inject constructor(
 
     fun saveKeyDraft(key: String) {
         extraState.update { it.copy(keyDraft = key) }
+    }
+
+    fun exportZip(target: android.net.Uri) = viewModelScope.launch {
+        runCatching { exporter.exportAsZip(target) }
+            .onSuccess { toasts.emit("已导出全部笔记到备份文件") }
+            .onFailure { toasts.emit("导出失败：${it.message}") }
+    }
+
+    fun importMarkdown(uri: android.net.Uri) = viewModelScope.launch {
+        runCatching { importer.importMarkdown(uri) }
+            .onSuccess { toasts.emit("已导入笔记（id=$it）") }
+            .onFailure { toasts.emit("导入失败：${it.message}") }
     }
 
     fun saveAndVerifyKey(key: String) = viewModelScope.launch {

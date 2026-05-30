@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Checklist
@@ -151,6 +152,16 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, onOpenSettings: () -> Unit = {}
                         }
                         IconButton(onClick = vm::togglePreview) {
                             Icon(if (state.previewMode) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility, null)
+                        }
+                        IconButton(onClick = {
+                            scope.launch {
+                                val file = com.zhuji.note.domain.util.ShareCardGenerator.generate(
+                                    context, titleField.text.ifBlank { "无标题" }, bodyField.text
+                                )
+                                com.zhuji.note.domain.util.ShareCardGenerator.shareImage(context, file)
+                            }
+                        }) {
+                            Icon(Icons.Outlined.Share, contentDescription = "分享为图片")
                         }
                         IconButton(onClick = {
                             vm.onTitle(titleField.text); vm.onContent(bodyField.text); vm.save()

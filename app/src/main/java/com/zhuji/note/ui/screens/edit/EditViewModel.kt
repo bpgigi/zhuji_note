@@ -10,6 +10,8 @@ import com.zhuji.note.ai.ChatRequest
 import com.zhuji.note.ai.DeepSeekClient
 import com.zhuji.note.data.local.preferences.UserPreferencesDataStore
 import com.zhuji.note.domain.model.Note
+import com.zhuji.note.domain.model.BuiltInTemplates
+import com.zhuji.note.domain.util.TemplateEngine
 import com.zhuji.note.domain.usecase.GetNoteUseCase
 import com.zhuji.note.domain.usecase.SaveNoteUseCase
 import com.zhuji.note.domain.usecase.ToggleFlagsUseCase
@@ -45,6 +47,7 @@ class EditViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val noteId: Long = savedStateHandle.get<Long>("id") ?: 0L
+    private val templateId: String? = savedStateHandle.get<String>("tpl")
     private val _state = MutableStateFlow(EditUiState())
     val state: StateFlow<EditUiState> = _state.asStateFlow()
     private var aiJob: Job? = null
@@ -54,6 +57,12 @@ class EditViewModel @Inject constructor(
             viewModelScope.launch {
                 runCatching { getNote(noteId).first() }.getOrNull()?.let { existing ->
                     _state.update { it.copy(note = existing) }
+                }
+            }
+        } else if (!templateId.isNullOrBlank()) {
+            BuiltInTemplates.all.firstOrNull { it.id == templateId }?.let { tpl ->
+                _state.update {
+                    it.copy(note = it.note.copy(content = TemplateEngine.render(tpl.contentTemplate)))
                 }
             }
         }
