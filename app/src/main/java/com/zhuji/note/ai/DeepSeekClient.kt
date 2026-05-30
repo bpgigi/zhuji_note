@@ -22,7 +22,7 @@ class DeepSeekClient(
     suspend fun listModels(apiKey: String): List<ModelEntry> = withContext(Dispatchers.IO) {
         if (apiKey.isBlank()) return@withContext DEFAULT_MODELS
         val req = Request.Builder()
-            .url("$baseUrl/v1/models")
+            .url("$baseUrl/models")
             .header("Authorization", apiKeyHeader(apiKey))
             .get()
             .build()
@@ -50,7 +50,7 @@ class DeepSeekClient(
         require(apiKey.isNotBlank()) { "缺少 DeepSeek API Key，请在设置中填写。" }
         val payload = json.encodeToString(ChatRequest.serializer(), request.copy(stream = false))
         val req = Request.Builder()
-            .url("$baseUrl/v1/chat/completions")
+            .url("$baseUrl/chat/completions")
             .header("Authorization", apiKeyHeader(apiKey))
             .post(payload.toRequestBody(JSON))
             .build()
@@ -65,9 +65,10 @@ class DeepSeekClient(
         require(apiKey.isNotBlank()) { "缺少 DeepSeek API Key，请在设置中填写。" }
         val payload = json.encodeToString(ChatRequest.serializer(), request.copy(stream = true))
         val req = Request.Builder()
-            .url("$baseUrl/v1/chat/completions")
+            .url("$baseUrl/chat/completions")
             .header("Authorization", apiKeyHeader(apiKey))
             .header("Accept", "text/event-stream")
+            .header("Accept-Encoding", "identity")
             .post(payload.toRequestBody(JSON))
             .build()
         val call = client.newCall(req)
@@ -120,3 +121,4 @@ class DeepSeekClient(
         )
     }
 }
+

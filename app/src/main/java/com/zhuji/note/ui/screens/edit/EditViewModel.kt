@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zhuji.note.ai.AiAction
 import com.zhuji.note.ai.ChatMessage
+import com.zhuji.note.ai.ThinkingConfig
 import com.zhuji.note.ai.ChatRequest
 import com.zhuji.note.ai.DeepSeekClient
 import com.zhuji.note.data.local.preferences.UserPreferencesDataStore
@@ -123,8 +124,9 @@ class EditViewModel @Inject constructor(
                     ChatMessage("user", userText),
                 ),
                 stream = true,
-                maxTokens = 1024,
-                temperature = 0.6,
+                maxTokens = 16384,
+                reasoningEffort = "low",
+                thinking = ThinkingConfig("enabled"),
             )
             try {
                 ai.chatStream(key, req).collect { ev ->
@@ -154,3 +156,4 @@ class EditViewModel @Inject constructor(
         it.copy(note = it.note.copy(content = combined), aiAnswer = "", aiReasoning = "")
     }
 }
+

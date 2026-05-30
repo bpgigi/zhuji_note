@@ -3,6 +3,7 @@ package com.zhuji.note.ui.screens.ai
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zhuji.note.ai.ChatMessage
+import com.zhuji.note.ai.ThinkingConfig
 import com.zhuji.note.ai.ChatRequest
 import com.zhuji.note.ai.DeepSeekClient
 import com.zhuji.note.data.local.preferences.UserPreferencesDataStore
@@ -49,8 +50,9 @@ class AiChatViewModel @Inject constructor(
                 model = p.deepseekModel,
                 messages = listOf(ChatMessage("system", "你是一个简洁、有同理心的中文 AI 笔记助手。给出干净的 Markdown 答案。")) + history,
                 stream = true,
-                maxTokens = 1024,
-                temperature = 0.7,
+                maxTokens = 16384,
+                reasoningEffort = "low",
+                thinking = ThinkingConfig("enabled"),
             )
             // 占位 assistant 气泡，逐字追加
             _state.update { it.copy(messages = it.messages + ChatBubble("assistant", "")) }
@@ -74,3 +76,4 @@ class AiChatViewModel @Inject constructor(
 
     fun cancel() { job?.cancel(); _state.update { it.copy(streaming = false) } }
 }
+

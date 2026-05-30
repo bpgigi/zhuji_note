@@ -7,6 +7,12 @@ import kotlinx.serialization.Serializable
 data class ChatMessage(
     val role: String,
     val content: String,
+    @SerialName("reasoning_content") val reasoningContent: String? = null,
+)
+
+@Serializable
+data class ThinkingConfig(
+    val type: String,
 )
 
 @Serializable
@@ -15,7 +21,14 @@ data class ChatRequest(
     val messages: List<ChatMessage>,
     val stream: Boolean = false,
     @SerialName("max_tokens") val maxTokens: Int? = null,
-    val temperature: Double? = null,
+    @SerialName("reasoning_effort") val reasoningEffort: String? = null,
+    val thinking: ThinkingConfig? = null,
+    @SerialName("response_format") val responseFormat: ResponseFormat? = null,
+)
+
+@Serializable
+data class ResponseFormat(
+    val type: String,
 )
 
 @Serializable
@@ -38,6 +51,14 @@ data class Usage(
     @SerialName("prompt_tokens") val promptTokens: Int = 0,
     @SerialName("completion_tokens") val completionTokens: Int = 0,
     @SerialName("total_tokens") val totalTokens: Int = 0,
+    @SerialName("prompt_cache_hit_tokens") val cacheHit: Int = 0,
+    @SerialName("prompt_cache_miss_tokens") val cacheMiss: Int = 0,
+    @SerialName("completion_tokens_details") val completionDetails: CompletionDetails? = null,
+)
+
+@Serializable
+data class CompletionDetails(
+    @SerialName("reasoning_tokens") val reasoningTokens: Int = 0,
 )
 
 @Serializable
