@@ -11,6 +11,8 @@
 ![Tests](https://img.shields.io/badge/tests-188%2F188%20pass-success)
 ![Coverage](https://img.shields.io/badge/coverage-LINE%2065.1%25%20%7C%20METHOD%2057.9%25-brightgreen)
 
+> 配套文档：[项目目标与分工](docs/GOAL.md) · [操作与汇报教程](docs/GUIDE.md)
+
 ## 一、项目定位
 
 ZhujiNote 是为 **MT2026 移动应用测试** 课程大作业设计的 Android 应用，配套实现 L02-L09 全部教学内容：
