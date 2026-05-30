@@ -89,7 +89,7 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-window -no-snapshot-save -no-audio -gpu swiftshader_indirect
           disable-animations: true
-          script: ./gradlew :app:connectedDebugAndroidTest
+          script: chmod +x gradlew && ./gradlew :app:connectedDebugAndroidTest
 
       - name: Upload AndroidTest reports
         if: always()
