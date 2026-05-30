@@ -54,7 +54,7 @@ fun AiChatScreen(onBack: () -> Unit, vm: AiChatViewModel = hiltViewModel()) {
         topBar = {
             TopAppBar(
                 title = { Text("AI 助手") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Outlined.ArrowBack, null) } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Outlined.ArrowBack, contentDescription = "返回") } },
             )
         }
     ) { padding ->

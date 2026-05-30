@@ -49,7 +49,7 @@ fun StatsScreen(onBack: () -> Unit, vm: StatsViewModel = hiltViewModel()) {
     Scaffold(topBar = {
         TopAppBar(
             title = { Text("统计", style = MaterialTheme.typography.titleMedium) },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, null) } },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "返回") } },
         )
     }) { padding ->
         Column(

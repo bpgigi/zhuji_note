@@ -64,6 +64,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -112,6 +114,7 @@ fun NotesScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 icon = { Icon(Icons.Rounded.Add, null) },
                 text = { Text("新笔记", style = MaterialTheme.typography.labelLarge) },
+                modifier = Modifier.semantics { contentDescription = "新笔记" },
             )
         }
     ) { padding: PaddingValues ->
@@ -195,6 +198,7 @@ private fun TopBar(
         IconButton(onClick = onSort) { Icon(Icons.Outlined.Sort, contentDescription = "排序") }
         IconButton(onClick = onAi) { Icon(Icons.Outlined.AutoAwesome, contentDescription = "AI 助手", tint = MaterialTheme.colorScheme.primary) }
         IconButton(onClick = onStats) { Icon(Icons.Outlined.Insights, contentDescription = "统计") }
+        IconButton(onClick = onTrash) { Icon(Icons.Outlined.Delete, contentDescription = "回收站") }
         IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, contentDescription = "设置") }
         Box {
             IconButton(onClick = { moreMenu = true }) { Icon(Icons.Outlined.MoreVert, contentDescription = "更多") }
@@ -218,11 +222,6 @@ private fun TopBar(
                     text = { Text("写作目标") },
                     leadingIcon = { Icon(Icons.Outlined.TrendingUp, null) },
                     onClick = { moreMenu = false; onGoal() },
-                )
-                DropdownMenuItem(
-                    text = { Text("回收站") },
-                    leadingIcon = { Icon(Icons.Outlined.Delete, null) },
-                    onClick = { moreMenu = false; onTrash() },
                 )
             }
         }
