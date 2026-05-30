@@ -43,7 +43,7 @@ fun ZhujiApp() {
             arguments = listOf(navArgument("id") { type = NavType.LongType }),
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getLong("id") ?: 0L
-            EditScreen(noteId = id, onBack = { nav.popBackStack() })
+            EditScreen(noteId = id, onBack = { nav.popBackStack() }, onOpenSettings = { nav.navigate(Routes.Settings.path) })
         }
         composable(Routes.Settings.path) {
             SettingsScreen(onBack = { nav.popBackStack() })

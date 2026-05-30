@@ -1,10 +1,12 @@
 package com.zhuji.note.ui.screens.edit
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -23,6 +26,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Checklist
@@ -95,7 +103,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditScreen(noteId: Long, onBack: () -> Unit, vm: EditViewModel = hiltViewModel()) {
+fun EditScreen(noteId: Long, onBack: () -> Unit, onOpenSettings: () -> Unit = {}, vm: EditViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val snackHost = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -265,6 +273,10 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, vm: EditViewModel = hiltViewMod
                 onClose = { aiOpen = false },
                 onAction = { action -> vm.runAi(action, currentText = bodyField.text, currentTitle = titleField.text) },
                 onCancel = vm::cancelAi,
+                onOpenSettings = {
+                    aiOpen = false
+                    onOpenSettings()
+                },
                 onApply = {
                     val merged = if (bodyField.text.isBlank()) state.aiAnswer else "${bodyField.text}\n\n${state.aiAnswer}"
                     bodyField = TextFieldValue(merged, TextRange(merged.length))
@@ -326,15 +338,23 @@ private fun AiSheet(
     onClose: () -> Unit,
     onAction: (AiAction) -> Unit,
     onCancel: () -> Unit,
+    onOpenSettings: () -> Unit,
     onApply: () -> Unit,
     onCopy: () -> Unit,
 ) {
+    val sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
     androidx.compose.material3.ModalBottomSheet(
         onDismissRequest = onClose,
+        sheetState = sheetState,
         shape = ZhujiCornerTokens.Sheet,
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
-        Column(Modifier.padding(horizontal = Spacing.xl, vertical = Spacing.lg)) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.xl)
+                .padding(bottom = Spacing.lg)
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.padding(start = Spacing.xs))
@@ -359,47 +379,128 @@ private fun AiSheet(
                 }
             }
             Spacer(Modifier.height(Spacing.lg))
-            if (state.aiReasoning.isNotBlank()) {
-                Surface(
-                    tonalElevation = 1.dp,
-                    color = MaterialTheme.colorScheme.tertiaryContainer,
-                    shape = ZhujiCornerTokens.NoteCard,
-                ) {
-                    Column(Modifier.padding(Spacing.md)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("思考中…", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onTertiaryContainer)
-                            Spacer(Modifier.padding(start = Spacing.xs))
-                            TypingDot()
-                        }
-                        Spacer(Modifier.height(Spacing.xs))
-                        Text(state.aiReasoning, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onTertiaryContainer)
-                    }
-                }
-                Spacer(Modifier.height(Spacing.md))
-            }
-            AnimatedVisibility(state.aiAnswer.isNotBlank(), enter = fadeIn() + slideInVertically(), exit = fadeOut()) {
-                Column {
-                    MarkdownView(state.aiAnswer)
+            Column(
+                Modifier
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                if (state.aiReasoning.isNotBlank()) {
+                    ReasoningCard(
+                        reasoning = state.aiReasoning,
+                        streaming = state.aiStreaming,
+                        answerReady = state.aiAnswer.isNotBlank(),
+                    )
                     Spacer(Modifier.height(Spacing.md))
-                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                }
+                AnimatedVisibility(state.aiAnswer.isNotBlank(), enter = fadeIn() + slideInVertically(), exit = fadeOut()) {
+                    MarkdownView(state.aiAnswer)
+                }
+                if (state.aiAnswer.isBlank() && state.aiStreaming && state.aiReasoning.isBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TypingDot()
+                        Spacer(Modifier.padding(start = Spacing.xs))
+                        Text("AI 正在生成…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                } else if (state.errorMessage != null && state.aiAnswer.isBlank() && state.aiReasoning.isBlank()) {
+                    KeyErrorCard(message = state.errorMessage, onOpenSettings = onOpenSettings)
+                } else if (state.aiAnswer.isBlank() && state.aiReasoning.isBlank() && !state.aiStreaming) {
+                    Text("点击上方任一按钮，让 AI 帮你处理这条笔记。", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (state.errorMessage != null && !state.aiStreaming && (state.aiReasoning.isNotBlank() || state.aiAnswer.isNotBlank())) {
+                    Spacer(Modifier.height(Spacing.md))
+                    KeyErrorCard(message = state.errorMessage, onOpenSettings = onOpenSettings)
+                }
+            }
+            if (state.aiAnswer.isNotBlank() || state.aiStreaming) {
+                Spacer(Modifier.height(Spacing.md))
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    if (state.aiAnswer.isNotBlank()) {
                         AssistChip(onClick = onApply, label = { Text("应用到笔记") }, leadingIcon = { Icon(Icons.Outlined.Done, null) })
                         AssistChip(onClick = onCopy, label = { Text("复制") }, leadingIcon = { Icon(Icons.Outlined.ContentCopy, null) })
-                        if (state.aiStreaming) {
-                            AssistChip(onClick = onCancel, label = { Text("停止") }, leadingIcon = { Icon(Icons.Outlined.Close, null) })
-                        }
+                    }
+                    if (state.aiStreaming) {
+                        AssistChip(onClick = onCancel, label = { Text("停止") }, leadingIcon = { Icon(Icons.Outlined.Close, null) })
                     }
                 }
             }
-            if (state.aiAnswer.isBlank() && state.aiStreaming) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    TypingDot()
-                    Spacer(Modifier.padding(start = Spacing.xs))
-                    Text("AI 正在生成…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            } else if (state.aiAnswer.isBlank() && !state.aiStreaming) {
-                Text("点击上方任一按钮，让 AI 帮你处理这条笔记。", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(Spacing.md))
+        }
+    }
+}
+
+@Composable
+private fun KeyErrorCard(message: String, onOpenSettings: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.errorContainer,
+        shape = ZhujiCornerTokens.NoteCard,
+    ) {
+        Column(Modifier.padding(Spacing.md)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Outlined.ErrorOutline, null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                Spacer(Modifier.padding(start = Spacing.xs))
+                Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer)
             }
-            Spacer(Modifier.height(Spacing.xxl))
+            if (message.contains("API Key")) {
+                Spacer(Modifier.height(Spacing.sm))
+                AssistChip(
+                    onClick = onOpenSettings,
+                    label = { Text("去设置填写 Key") },
+                    leadingIcon = { Icon(Icons.Outlined.Settings, null) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReasoningCard(reasoning: String, streaming: Boolean, answerReady: Boolean) {
+    var expanded by remember { mutableStateOf(true) }
+    LaunchedEffect(answerReady) {
+        if (answerReady) expanded = false
+    }
+    Surface(
+        tonalElevation = 1.dp,
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        shape = ZhujiCornerTokens.NoteCard,
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .animateContentSize()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(Spacing.md),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Outlined.Psychology, null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
+                Spacer(Modifier.padding(start = Spacing.xs))
+                Text(
+                    if (streaming && !answerReady) "深度思考中…" else "已深度思考",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+                if (streaming && !answerReady) {
+                    Spacer(Modifier.padding(start = Spacing.xs))
+                    TypingDot()
+                }
+                Spacer(Modifier.weight(1f))
+                Icon(
+                    if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                    contentDescription = if (expanded) "收起思考" else "展开思考",
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+            }
+            if (expanded) {
+                Text(
+                    reasoning,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.padding(start = Spacing.md, end = Spacing.md, bottom = Spacing.md),
+                )
+            }
         }
     }
 }
