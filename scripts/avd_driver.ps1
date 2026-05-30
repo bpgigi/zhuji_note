@@ -40,6 +40,7 @@ function Get-UiXml {
 function Find-Node {
     param([Parameter(Mandatory)][string]$Text, [switch]$Exact)
     $xml = Get-UiXml
+    if ([string]::IsNullOrEmpty($xml)) { return $null }
     $best = $null
     foreach ($m in [regex]::Matches($xml, '<node[^>]*?>')) {
         $tag = $m.Value
@@ -133,4 +134,60 @@ function Get-VisibleTexts {
         if ($label) { $out += $label }
     }
     return $out
+}
+
+function Scroll-FindChip {
+    param([Parameter(Mandatory)][string]$Text, [int]$MaxSwipes = 5)
+    $node = Find-Node -Text $Text -Exact
+    $tries = 0
+    while (-not $node -and $tries -lt $MaxSwipes) {
+        $row = Find-Node -Text '总结'
+        $y = if ($row) { $row.Y } else { 1969 }
+        Invoke-Adb shell input swipe 900 $y 200 $y 350 | Out-Null
+        Start-Sleep -Milliseconds 600
+        $node = Find-Node -Text $Text -Exact
+        $tries++
+    }
+    return $node
+}
+
+function Run-AiAction {
+    param(
+        [Parameter(Mandatory)][string]$Action,
+        [Parameter(Mandatory)][string]$ShotName,
+        [int]$TimeoutSec = 80
+    )
+    $chip = Scroll-FindChip -Text $Action
+    if (-not $chip) { return "FAIL: chip '$Action' not found" }
+    Invoke-Adb shell input tap $chip.X $chip.Y | Out-Null
+    $ok = Wait-Text -Text '应用到笔记' -TimeoutSec $TimeoutSec
+    Start-Sleep -Milliseconds 800
+    Save-Shot -Name $ShotName | Out-Null
+    if ($ok) { return "OK: $Action -> $ShotName" } else { return "TIMEOUT: $Action" }
+}
+
+function Test-AiActionClean {
+    param(
+        [Parameter(Mandatory)][string]$Action,
+        [Parameter(Mandatory)][string]$ShotName,
+        [string]$NoteText = 'Kotlin_Coroutines_Notes',
+        [int]$TimeoutSec = 110
+    )
+    Restart-App
+    Tap-Text -Text $NoteText | Out-Null
+    Hide-Keyboard
+    Tap-Text -Text '打开 AI 助手' | Out-Null
+    $chip = Scroll-FindChip -Text $Action
+    if (-not $chip) { return "FAIL: chip '$Action' not found" }
+    Invoke-Adb shell input tap $chip.X $chip.Y | Out-Null
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    $done = $false
+    while ((Get-Date) -lt $deadline) {
+        $xml = Get-UiXml
+        if ($xml -match '应用到笔记' -or $xml -match '复制') { $done = $true; break }
+        Start-Sleep -Milliseconds 2000
+    }
+    Start-Sleep -Milliseconds 1000
+    Save-Shot -Name $ShotName | Out-Null
+    if ($done) { return "OK: $Action -> $ShotName" } else { return "TIMEOUT: $Action" }
 }

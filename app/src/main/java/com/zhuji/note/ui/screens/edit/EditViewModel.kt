@@ -34,6 +34,7 @@ data class EditUiState(
     val aiStreaming: Boolean = false,
     val errorMessage: String? = null,
     val previewMode: Boolean = false,
+    val lastAction: AiAction? = null,
 )
 
 @HiltViewModel
@@ -108,7 +109,7 @@ class EditViewModel @Inject constructor(
     fun runAi(action: AiAction, currentText: String, currentTitle: String, extra: String = "") {
         aiJob?.cancel()
         aiJob = viewModelScope.launch {
-            _state.update { it.copy(aiReasoning = "", aiAnswer = "", aiStreaming = true, errorMessage = null) }
+            _state.update { it.copy(aiReasoning = "", aiAnswer = "", aiStreaming = true, errorMessage = null, lastAction = action) }
             val p = prefs.flow.first()
             val key = p.deepseekKey
             val model = p.deepseekModel.ifBlank { "deepseek-v4-flash" }
@@ -160,9 +161,19 @@ class EditViewModel @Inject constructor(
     fun cancelAi() { aiJob?.cancel(); _state.update { it.copy(aiStreaming = false) } }
 
     fun applyAiToContent() = _state.update {
-        val combined = if (it.note.content.isBlank()) it.aiAnswer
-        else "${it.note.content}\n\n${it.aiAnswer}"
-        it.copy(note = it.note.copy(content = combined), aiAnswer = "", aiReasoning = "")
+        val merged = com.zhuji.note.ai.AiApplyStrategy.merge(
+            action = it.lastAction,
+            currentTitle = it.note.title,
+            currentContent = it.note.content,
+            answer = it.aiAnswer,
+        )
+        it.copy(
+            note = it.note.copy(title = merged.title, content = merged.content),
+            aiAnswer = "", aiReasoning = "", lastAction = null,
+        )
     }
+
+    fun currentAnswer(): String = _state.value.aiAnswer
+    fun currentAction(): AiAction? = _state.value.lastAction
 }
 

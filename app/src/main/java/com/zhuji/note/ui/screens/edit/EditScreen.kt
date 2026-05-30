@@ -294,11 +294,8 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, onOpenSettings: () -> Unit = {}
                     onOpenSettings()
                 },
                 onApply = {
-                    val merged = if (bodyField.text.isBlank()) state.aiAnswer else "${bodyField.text}\n\n${state.aiAnswer}"
-                    bodyField = TextFieldValue(merged, TextRange(merged.length))
-                    vm.onContent(merged)
                     vm.applyAiToContent()
-                    scope.launch { snackHost.showSnackbar("AI 答案已合并到笔记") }
+                    scope.launch { snackHost.showSnackbar("已应用 AI 结果") }
                     aiOpen = false
                 },
                 onCopy = {
