@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Hub
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Psychology
@@ -287,7 +288,7 @@ fun EditScreen(noteId: Long, onBack: () -> Unit, onOpenSettings: () -> Unit = {}
             AiSheet(
                 state = state,
                 onClose = { aiOpen = false },
-                onAction = { action -> vm.runAi(action, currentText = bodyField.text, currentTitle = titleField.text) },
+                onAction = { action, q -> vm.runAi(action, currentText = bodyField.text, currentTitle = titleField.text, extra = q) },
                 onCancel = vm::cancelAi,
                 onOpenSettings = {
                     aiOpen = false
@@ -350,13 +351,14 @@ private fun ToolItem(label: String, icon: ImageVector, onClick: () -> Unit) {
 private fun AiSheet(
     state: EditUiState,
     onClose: () -> Unit,
-    onAction: (AiAction) -> Unit,
+    onAction: (AiAction, String) -> Unit,
     onCancel: () -> Unit,
     onOpenSettings: () -> Unit,
     onApply: () -> Unit,
     onCopy: () -> Unit,
 ) {
     val sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var question by remember { mutableStateOf("") }
     androidx.compose.material3.ModalBottomSheet(
         onDismissRequest = onClose,
         sheetState = sheetState,
@@ -382,7 +384,7 @@ private fun AiSheet(
             LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 items(AiAction.values().toList()) { action ->
                     AssistChip(
-                        onClick = { onAction(action) },
+                        onClick = { onAction(action, if (action == AiAction.QA) question else "") },
                         label = { Text(action.title) },
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -392,6 +394,22 @@ private fun AiSheet(
                     )
                 }
             }
+            Spacer(Modifier.height(Spacing.sm))
+            OutlinedTextField(
+                value = question,
+                onValueChange = { question = it },
+                placeholder = { Text("问答模式：在此输入你的问题") },
+                leadingIcon = { Icon(Icons.AutoMirrored.Outlined.HelpOutline, null) },
+                singleLine = true,
+                shape = ZhujiCornerTokens.Input,
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+            )
             Spacer(Modifier.height(Spacing.lg))
             Column(
                 Modifier
