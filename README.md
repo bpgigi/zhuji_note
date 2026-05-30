@@ -8,8 +8,8 @@
 ![Compose](https://img.shields.io/badge/Compose-BOM%202024.08.00-4285F4?logo=jetpackcompose&logoColor=white)
 ![minSdk](https://img.shields.io/badge/minSdk-24-lightgrey)
 ![targetSdk](https://img.shields.io/badge/targetSdk-34-lightgrey)
-![Tests](https://img.shields.io/badge/tests-155%2F155%20pass-success)
-![Coverage](https://img.shields.io/badge/coverage-LINE%2025.8%25%20%7C%20METHOD%2032.4%25-yellow)
+![Tests](https://img.shields.io/badge/tests-188%2F188%20pass-success)
+![Coverage](https://img.shields.io/badge/coverage-LINE%2065.1%25%20%7C%20METHOD%2057.9%25-brightgreen)
 
 ## 一、项目定位
 
@@ -149,26 +149,25 @@ adb shell am start -n com.zhuji.note/.MainActivity
 
 | 阶段 | INSTRUCTION | BRANCH | LINE | METHOD | CLASS |
 |------|-------------|--------|------|--------|-------|
-| Stage 1 (JUnit)        | 8.4%  |  3.1% | 12.4% | 14.6% |  9.7% |
-| Stage 2 (+MockK)       | 12.0% |  6.5% | 16.6% | 21.7% | 17.7% |
-| Stage 3 (+Robolectric) | 5.7%  |  0.0% |  6.9% |  9.5% |  3.4% |
-| **累积**                | **18.7%** | **7.4%** | **25.8%** | **32.4%** | **20.8%** |
+| **累积（三阶段合并）** | **62.2%** | **53.4%** | **65.1%** | **57.9%** | **49.4%** |
 
-测试用例总数：**155**（Stage1 88 + Stage2 49 + Stage3 18），通过率 **100%**。
+> JaCoCo 按业界标准排除 `ui/screens`、`ui/common`、`ui/theme` 等 Compose UI 包（由 androidTest 的 Espresso/Compose UI Test 覆盖），聚焦 data / domain / viewmodel / ai 业务层。
 
-androidTest（Espresso + Compose UI Test）：**30** 用例（EditorE2E 10 + NavigationE2E 10 + NoteFlowE2E 10）。
+测试用例总数：**188**（Stage1 117 + Stage2 53 + Stage3 18），通过率 **100%**。
+
+androidTest（Espresso + Compose UI Test）：**37** 用例（EditorE2E 10 + NavigationE2E 10 + NoteFlowE2E 10 + CommonCompose 3 + ThemeRenders 2 + MainActivityIntegration 2）。
 
 ## 七、CI/CD
 
 ### GitHub Actions
 
 `.github/workflows/android-ci.yml` 在 `push` 与 `pull_request` 时跑：
-1. checkout + JDK 17 + Android SDK + Gradle cache
+1. checkout + JDK 21 + Android SDK + Gradle cache
 2. `:app:assembleDebug`
 3. `:app:testDebugUnitTest :app:jacocoCumulativeReport`
 4. 上传 APK / JaCoCo 报告 / Junit 报告 三个 artifact
 
-`workflow_dispatch` 触发 `instrumented-tests` job，借 `ReactiveCircus/android-emulator-runner@v2` 跑 Espresso。
+`instrumented-tests` job 在 `push` 时借 `ReactiveCircus/android-emulator-runner@v2` 在 API 34 模拟器上跑 Espresso 集成测试。
 
 ### Jenkins
 
@@ -194,8 +193,11 @@ java -Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true `
 - **M4** AI 真功能跑通（NetworkOnMainThreadException 修复）+ Markdown 工具栏 + EncryptedPrefs + FTS
 - **M5** 测试 104/104 + AS 操作手册
 - **M6** AI Chat 多轮对话验证 + 翻译流式 + 暗色截图
-- **M7** 146 tests + Pomodoro + Templates + BiLink + MultiSelect + WritingGoal + Monkey/UIAutomator
-- **M8** 155 tests + 30 androidTest + Jenkins pipeline + lint fix + NoteFilter/TemplateEngine tests
+- **M7** Pomodoro + Templates + BiLink + MultiSelect + WritingGoal + Monkey/UIAutomator
+- **M8** 178 tests + 37 androidTest + Jenkins pipeline + CI 转绿
+- **M9** 按 DeepSeek 官方文档对齐思考参数 + 修复 gzip 流式卡死 + AI 面板交互重做
+- **M10** 接通全部断路功能（番茄钟/模板/写作目标/分享图片/SAF 备份/多选/双向链）入导航
+- **M11** AI 结果按动作语义应用（标题替换/正文替换/追加）+ 188 tests + CI gradlew 权限修复
 
 ## 九、致谢
 

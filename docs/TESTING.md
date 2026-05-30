@@ -6,13 +6,13 @@
 
 ```
         ╱╲          E2E / 集成（androidTest）
-       ╱  ╲         30 用例：Espresso + Compose UI Test（真机/AVD）
+       ╱  ╲         37 用例：Espresso + Compose UI Test（真机/AVD）
       ╱────╲
      ╱      ╲       Robolectric（Stage3）
     ╱        ╲      18 用例：Room/Dao/DataStore/Theme（JVM 上跑 Android API）
    ╱──────────╲
   ╱            ╲    单元测试（Stage1 + Stage2）
- ╱              ╲   160 用例：纯逻辑 + MockK 替身
+ ╱              ╲   170 用例：纯逻辑 + MockK 替身
 ╱────────────────╲
 ```
 
@@ -20,10 +20,10 @@
 
 | 阶段 | 包 | 技术 | 用例数 | 测什么 |
 |------|-----|------|--------|--------|
-| **Stage1** | `com.zhuji.note.stage1` | 纯 JUnit + Truth | 88 | 纯逻辑：字数统计、Markdown 工具栏、模板引擎、双向链接解析、笔记过滤、番茄钟状态、写作目标、笔记统计 |
-| **Stage2** | `com.zhuji.note.stage2` | JUnit + MockK + Turbine + MockWebServer | 49 | ViewModel、Repository（mock DAO）、DeepSeek SSE 客户端、边界用例（401/429/空流） |
+| **Stage1** | `com.zhuji.note.stage1` | 纯 JUnit + Truth | 117 | 纯逻辑：字数统计、Markdown 工具栏、模板引擎、双向链接解析、笔记过滤、番茄钟状态、写作目标、笔记统计、AI 序列化、AI 结果应用策略 |
+| **Stage2** | `com.zhuji.note.stage2` | JUnit + MockK + Turbine + MockWebServer | 53 | ViewModel、Repository（mock DAO）、DeepSeek SSE 客户端、边界用例（401/429/空流） |
 | **Stage3** | `com.zhuji.note.stage3` | Robolectric | 18 | Room 数据库真实读写、Dao、DataStore、主题 token |
-| **androidTest** | （instrumented） | Espresso + Compose UI Test | 30 | 端到端：编辑器流程、导航、笔记 CRUD 流程 |
+| **androidTest** | （instrumented） | Espresso + Compose UI Test | 37 | 端到端：编辑器流程、导航、笔记 CRUD 流程、共享组件、主题渲染、Hilt 注入 |
 
 ## 3. 运行命令
 
@@ -48,11 +48,11 @@
 
 | 指标 | 覆盖率 |
 |------|--------|
-| LINE | 68.0% |
-| INSTRUCTION | 66.0% |
-| METHOD | 62.7% |
-| BRANCH | 55.7% |
-| CLASS | 58.2% |
+| LINE | 65.1% |
+| INSTRUCTION | 62.2% |
+| METHOD | 57.9% |
+| BRANCH | 53.4% |
+| CLASS | 49.4% |
 
 ### 覆盖率范围说明（业界标准做法）
 JaCoCo 统计**排除 UI/Compose 层**（`ui/screens/**`、`ui/common/**`、`ui/theme/**`）。理由：
