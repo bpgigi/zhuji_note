@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ZhujiNote 移动应用测试教程</title>
+<style>
+  @page { size: A4; margin: 11mm 12mm 10mm 12mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  :root {
+    --bg:#FFFFFF; --ink:#2B2A27; --ink-soft:#57544D; --ink-faint:#908B80;
+    --accent:#C96442; --accent-2:#D97757; --line:#E5E1D8; --line-soft:#EDEAE2;
+    --panel:#F6F4EF; --code-bg:#F7F5F0; --green:#5A7D5A;
+  }
+  body {
+    font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",-apple-system,Helvetica,sans-serif;
+    color:var(--ink); font-size:12px; line-height:1.45; margin:0; background:var(--bg);
+  }
+  .accent{color:var(--accent);}
+  code{font-family:"Cascadia Code",Consolas,Menlo,Monaco,monospace; color:var(--accent); font-size:.9em;}
+
+  /* 封面 */
+  .cover{padding:3mm 0 0; page-break-after:always;}
+  .cover h1{font-size:46px; font-weight:800; margin:0 0 2px; letter-spacing:-1px;}
+  .cover .sub{font-size:15px; color:var(--ink-soft); margin:0 0 10px;}
+  .cover .courseline{border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    padding:7px 0; margin:9px 0 14px; color:var(--accent); font-weight:700; font-size:11px;}
+  .meta-title{font-size:14px; font-weight:700; margin:12px 0 0; padding-bottom:4px; border-bottom:1.5px solid var(--accent);}
+  table.meta{width:100%; border-collapse:collapse; margin:8px 0 12px; font-size:11px;}
+  table.meta td{padding:4px 4px; border-bottom:1px solid var(--line-soft); vertical-align:top;}
+  table.meta tr:last-child td{border-bottom:1.5px solid var(--accent);}
+  table.meta td.k{width:24%; font-weight:700;}
+
+  /* 目录 */
+  .toc{margin:6px 0 0;}
+  .toc h2{font-size:15px; font-weight:800; margin:0 0 6px; padding-bottom:4px; border-bottom:1.5px solid var(--ink);}
+  .toc ol{margin:0; padding-left:0; list-style:none; counter-reset:toc;}
+  .toc li{counter-increment:toc; display:flex; align-items:baseline; padding:4px 0; border-bottom:1px dotted var(--line); font-size:12px;}
+  .toc li::before{content:counter(toc,decimal-leading-zero); color:var(--accent); font-weight:800; width:30px; font-family:Consolas,monospace;}
+  .toc .t{font-weight:700;}
+  .toc .d{color:var(--ink-faint); margin-left:8px; font-size:10.5px;}
+
+  /* 章节 */
+  h2.sec{font-size:16px; font-weight:800; margin:16px 0 3px; padding-bottom:5px; border-bottom:1.5px solid var(--ink); break-after:avoid;}
+  h2.sec::before{content:""; display:inline-block; width:4px; height:14px; background:var(--accent); margin-right:8px; vertical-align:-2px; border-radius:2px;}
+  h2.sec .cn{color:var(--ink-faint); font-weight:700; font-size:11px; margin-left:7px;}
+  h3.sub{font-size:12.5px; font-weight:700; margin:11px 0 3px; break-after:avoid;}
+  h3.sub::before{content:"▸"; color:var(--accent); margin-right:5px; font-size:10px;}
+  p{margin:4px 0;}
+  ul,ol{margin:4px 0; padding-left:17px;}
+  li{margin:2px 0;}
+  strong{font-weight:700;}
+
+  /* 表格 */
+  table.data{width:100%; border-collapse:collapse; margin:7px 0 10px; font-size:10.8px;
+    border-top:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink);}
+  table.data th{font-weight:700; text-align:left; font-size:10.5px; padding:5px 7px;
+    border-bottom:1px solid var(--accent); background:var(--panel);}
+  table.data td{padding:4px 7px; border-bottom:1px solid var(--line-soft); vertical-align:top;}
+  table.data tr:nth-child(even) td{background:rgba(242,239,230,.45);}
+  table.data td.first{color:var(--accent); font-weight:600;}
+  table.data code{font-size:.92em;}
+
+  /* 代码块 */
+  pre{font-family:Consolas,Menlo,Monaco,monospace; font-size:10px; line-height:1.4; color:var(--ink);
+    background:var(--code-bg); border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:4px; padding:8px 10px; overflow-x:auto; margin:6px 0; white-space:pre-wrap; word-break:break-word;}
+  pre .c{color:var(--ink-faint);}
+  pre .k{color:var(--accent); font-weight:600;}
+  pre .s{color:var(--green);}
+  pre.tree{color:var(--ink-soft); font-size:9.5px; border-left-color:var(--ink-faint);}
+
+  /* 提示框 */
+  .note{background:#FBF3EE; border-left:3px solid var(--accent); padding:6px 10px; margin:7px 0;
+    font-size:10.8px; color:var(--ink-soft); border-radius:0 4px 4px 0;}
+  .note b{color:var(--accent);}
+
+  /* 双栏 */
+  .cols{display:flex; gap:12px;}
+  .cols>div{flex:1; min-width:0;}
+
+  /* 标签 */
+  .tag{display:inline-block; background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:1px 8px; font-size:10px; color:var(--ink-soft); margin:1px 2px;}
+  .tag.a{background:#FBF3EE; border-color:var(--accent-2); color:var(--accent);}
+
+  /* KPI */
+  .kpi-row{display:flex; gap:8px; margin:9px 0;}
+  .kpi{flex:1; border:1px solid var(--line); background:#fff; border-radius:7px; padding:9px 6px; text-align:center;}
+  .kpi .v{font-size:22px; font-weight:800; color:var(--accent); line-height:1;}
+  .kpi .l{font-size:9.5px; color:var(--ink-soft); margin-top:4px;}
+
+  .newpage{page-break-before:always;}
+  table.data,pre,.note,.kpi-row{break-inside:avoid;}
+  .footer{text-align:right; color:var(--ink-faint); font-size:9.5px; margin-top:14px; padding-top:5px; border-top:1px solid var(--line-soft);}
+</style>
+</head>
+<body>
+
+<!-- ============ 封面 ============ -->
+<section class="cover">
+  <h1>移动应用测试教程</h1>
+  <div class="sub">Android App Testing Handbook · 基于 ZhujiNote 助记笔记项目</div>
+  <div class="courseline">MT2026 移动应用测试 · 大连理工大学软件学院 · 从环境搭建到持续集成的全流程实践</div>
+
+  <div class="meta-title">教程概览</div>
+  <table class="meta">
+    <tr><td class="k">配套项目</td><td>ZhujiNote 助记笔记（Jetpack Compose + DeepSeek AI + Clean Architecture）</td></tr>
+    <tr><td class="k">覆盖课次</td><td>L02 环境 · L04 GUI · L05 单元 · L06 Mock · L07 覆盖率 · L08 集成 · L09 CI</td></tr>
+    <tr><td class="k">技术栈</td><td>Gradle 8.9 + AGP 8.5.2 + Kotlin 1.9.24 + Hilt + Room(FTS4) + OkHttp</td></tr>
+    <tr><td class="k">测试框架</td><td>JUnit 4.13.2 · Truth · MockK 1.13.12 · Robolectric 4.13 · Espresso 3.6.1 · Compose UI Test</td></tr>
+    <tr><td class="k">测试规模</td><td>单元 188（Stage1 117 / Stage2 53 / Stage3 18）+ 集成 37 = 225 用例</td></tr>
+    <tr><td class="k">覆盖率工具</td><td>JaCoCo 0.8.12（三阶段独立 .exec + 累积报告）</td></tr>
+    <tr><td class="k">累积覆盖率</td><td>LINE 65.1% / METHOD 57.9% / BRANCH 53.4%</td></tr>
+    <tr><td class="k">CI/CD</td><td>Jenkins 声明式 Pipeline + GitHub Actions 双轨</td></tr>
+  </table>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="v">7</div><div class="l">教程章节</div></div>
+    <div class="kpi"><div class="v">225</div><div class="l">测试用例</div></div>
+    <div class="kpi"><div class="v">5</div><div class="l">测试框架</div></div>
+    <div class="kpi"><div class="v">100%</div><div class="l">通过率</div></div>
+    <div class="kpi"><div class="v">65%</div><div class="l">行覆盖率</div></div>
+  </div>
+
+  <div class="toc">
+    <h2>目录</h2>
+    <ol>
+      <li><span class="t">环境搭建与 ADB 入门</span><span class="d">L02 · AS / SDK / AVD / adb 命令</span></li>
+      <li><span class="t">GUI 测试 — Monkey 与 UIAutomator2</span><span class="d">L04 · 随机压测 + 结构化自动化</span></li>
+      <li><span class="t">单元测试 — JUnit 基础</span><span class="d">L05 · JUnit4 + Truth · Stage1</span></li>
+      <li><span class="t">Mock 测试 — MockK</span><span class="d">L06 · 隔离依赖 · Stage2</span></li>
+      <li><span class="t">测试覆盖率 — JaCoCo + Robolectric</span><span class="d">L07 · 三阶段覆盖 · Stage3</span></li>
+      <li><span class="t">集成测试 — Espresso</span><span class="d">L08 · Compose UI Test + Hilt</span></li>
+      <li><span class="t">持续集成 — Jenkins</span><span class="d">L09 · Declarative Pipeline</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ 01 环境 ============ -->
+<section>
+  <h2 class="sec">01　环境搭建与 ADB 入门<span class="cn">L02 · Dev Environment</span></h2>
+
+  <h3 class="sub">开发环境要素</h3>
+  <table class="data">
+    <tr><th style="width:20%">组件</th><th>本项目配置</th></tr>
+    <tr><td class="first">Android Studio</td><td>Panda 4（<code>D:\Softwares\AndroidStudio</code>）</td></tr>
+    <tr><td class="first">JDK</td><td>AS 自带 JBR 21（<code>D:\Softwares\AndroidStudio\jbr</code>），无需另装</td></tr>
+    <tr><td class="first">Android SDK</td><td>compileSdk 34 / minSdk 24（<code>%LOCALAPPDATA%\Android\Sdk</code>）</td></tr>
+    <tr><td class="first">AVD 模拟器</td><td><code>zhuji_avd</code>（Pixel 7, API 34, x86_64, AEHD 加速）</td></tr>
+    <tr><td class="first">构建工具</td><td>Gradle 8.9 + AGP 8.5.2 + Kotlin 1.9.24 + KSP</td></tr>
+  </table>
+
+  <div class="cols">
+    <div>
+      <h3 class="sub">安装流程</h3>
+      <ol>
+        <li>下载 AS → Standard 安装，自动拉取 SDK 34 + 模拟器镜像</li>
+        <li>打开项目等 Gradle Sync（已配阿里云镜像加速）</li>
+        <li>Sync 失败点大象图标 <code>Sync Project with Gradle Files</code></li>
+      </ol>
+      <h3 class="sub">环境变量</h3>
+<pre><span class="k">ANDROID_HOME</span> = %LOCALAPPDATA%\Android\Sdk
+<span class="k">PATH</span> += %ANDROID_HOME%\platform-tools
+<span class="c"># 验证</span>
+adb version</pre>
+    </div>
+    <div>
+      <h3 class="sub">镜像加速（settings.gradle.kts）</h3>
+<pre>maven { url = uri(<span class="s">"https://maven.aliyun.com/repository/google"</span>) }
+maven { url = uri(<span class="s">"https://maven.aliyun.com/repository/public"</span>) }
+maven { url = uri(<span class="s">"https://maven.aliyun.com/repository/gradle-plugin"</span>) }</pre>
+      <div class="note"><b>提示</b>　中文路径下 Gradle/Robolectric 可能 ClassNotFoundException，建议构建目录放英文路径（如 <code>D:\Projects\zhuji_note</code>）。</div>
+    </div>
+  </div>
+
+  <h3 class="sub">ADB 常用命令</h3>
+  <table class="data">
+    <tr><th style="width:42%">命令</th><th>作用</th></tr>
+    <tr><td><code>adb devices</code></td><td>列出已连接设备 / 模拟器</td></tr>
+    <tr><td><code>adb shell pm list packages</code></td><td>列出所有应用包名</td></tr>
+    <tr><td><code>adb install -r app.apk</code></td><td>安装 APK（-r 覆盖）</td></tr>
+    <tr><td><code>adb shell am start -n 包名/.Activity</code></td><td>启动指定 Activity</td></tr>
+    <tr><td><code>adb shell screencap -p /sdcard/s.png</code></td><td>截屏（配合 <code>adb pull</code> 取回）</td></tr>
+    <tr><td><code>adb shell uiautomator dump</code></td><td>dump 当前界面 XML 层级</td></tr>
+    <tr><td><code>adb shell input tap x y</code> / <code>input text "hi"</code></td><td>模拟点击 / 输入 / <code>keyevent 4</code> 返回</td></tr>
+  </table>
+
+  <h3 class="sub">一键启动与验证（本项目脚本）</h3>
+  <div class="cols">
+    <div>
+<pre><span class="c"># scripts/start_avd.ps1：启动+等boot+关动画</span>
+.\scripts\start_avd.ps1</pre>
+    </div>
+    <div>
+<pre>.\gradlew.bat :app:assembleDebug
+adb install -r app\build\outputs\apk\debug\app-debug.apk
+adb shell am start -n com.zhuji.note/.MainActivity
+.\scripts\screenshot.ps1  <span class="c"># → docs/screens/</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 02 GUI ============ -->
+<section class="newpage">
+  <h2 class="sec">02　GUI 测试 — Monkey 与 UIAutomator2<span class="cn">L04 · GUI Testing</span></h2>
+
+  <table class="data">
+    <tr><th style="width:24%">方式</th><th style="width:24%">工具</th><th>原理</th></tr>
+    <tr><td class="first">随机压力测试</td><td>Monkey（系统自带）</td><td>向随机坐标发送随机事件，暴露 Crash / ANR</td></tr>
+    <tr><td class="first">精确自动化测试</td><td>UIAutomator2（Python）</td><td>识别界面元素，按控件属性精确操作</td></tr>
+  </table>
+
+  <h3 class="sub">Monkey 随机测试</h3>
+  <div class="cols">
+    <div>
+<pre>adb shell monkey -p com.zhuji.note -v 500</pre>
+      <table class="data">
+        <tr><th style="width:42%">参数</th><th>说明</th></tr>
+        <tr><td><code>-p 包名</code></td><td>限定在某应用内</td></tr>
+        <tr><td><code>-s 种子</code></td><td>固定随机序列，可复现</td></tr>
+        <tr><td><code>--throttle ms</code></td><td>事件间隔</td></tr>
+        <tr><td><code>--pct-touch N</code></td><td>点击事件百分比</td></tr>
+        <tr><td><code>-v -v -v</code></td><td>日志级别 L0/L1/L2</td></tr>
+        <tr><td><code>--ignore-crashes</code></td><td>崩溃后继续</td></tr>
+      </table>
+    </div>
+    <div>
+      <h4 style="font-size:11px;font-weight:700;margin:0 0 3px;color:var(--ink-soft)">本项目 scripts/monkey_test.ps1</h4>
+<pre>$adb shell monkey -p com.zhuji.note `
+  --throttle 200 --ignore-crashes `
+  --ignore-timeouts -v 5000</pre>
+      <div class="note">日志含 <code>// CRASH</code> = 崩溃，<code>// NOT RESPONDING</code> = ANR。脚本自动统计数量并写入 <code>docs/reports/monkey-output.txt</code>。</div>
+    </div>
+  </div>
+
+  <h3 class="sub">UIAutomator2（Python）</h3>
+  <div class="cols">
+    <div>
+<pre><span class="c"># 安装</span>
+pip install uiautomator2 uiautodev
+python -m uiautomator2 init
+
+<span class="c"># 基本脚本</span>
+<span class="k">import</span> uiautomator2 <span class="k">as</span> u2
+d = u2.connect()
+d.app_start(<span class="s">"com.zhuji.note"</span>)
+d.implicitly_wait(10.0)
+xml = d.dump_hierarchy()
+d.app_stop(<span class="s">"com.zhuji.note"</span>)</pre>
+    </div>
+    <div>
+      <table class="data">
+        <tr><th>定位方式</th><th>代码</th></tr>
+        <tr><td>resourceId</td><td><code>d(resourceId="…:id/fab")</code></td></tr>
+        <tr><td>text</td><td><code>d(text="新建笔记")</code></td></tr>
+        <tr><td>description</td><td><code>d(description="设置")</code></td></tr>
+        <tr><td>坐标</td><td><code>d.click(540, 960)</code></td></tr>
+      </table>
+      <p style="font-size:10.8px;color:var(--ink-soft)">查看元素：<code>uiauto.dev</code> 启动 Web 查看器；或 <code>adb shell uiautomator dump</code> 后用本项目 <code>scripts/ui_coords.py</code> 解析坐标。</p>
+    </div>
+  </div>
+
+  <div class="note"><b>本项目脚本</b>　<code>uiautomator_e2e.ps1</code> 用 adb input 走完整流程并逐页截图；<code>avd_driver.ps1</code> 封装 <code>Find-Node / Tap-Text / Wait-Text / Run-AiAction</code> 等基于 dump XML 的 UI 驱动函数。</div>
+
+  <table class="data">
+    <tr><th>维度</th><th>Monkey</th><th>UIAutomator2</th></tr>
+    <tr><td class="first">测试目标</td><td>稳定性 / 崩溃</td><td>功能正确性</td></tr>
+    <tr><td class="first">理解界面</td><td>不需要</td><td>需要</td></tr>
+    <tr><td class="first">编写成本</td><td>一行命令</td><td>编写脚本</td></tr>
+    <tr><td class="first">适用阶段</td><td>冒烟 / 压力</td><td>回归 / 验收</td></tr>
+  </table>
+</section>
+
+<!-- ============ 03 JUnit ============ -->
+<section class="newpage">
+  <h2 class="sec">03　单元测试 — JUnit 基础<span class="cn">L05 · Unit Testing</span></h2>
+
+  <div class="cols">
+    <div>
+      <p>单元测试针对最小单位（方法/类）验证正确性，跑在本机 <strong>JVM</strong>，不需模拟器，毫秒级。</p>
+      <h3 class="sub">测试目录</h3>
+<pre class="tree">app/src/
+├ main/        <span class="c">← 应用代码</span>
+├ test/        <span class="c">← 单元测试（JVM）</span>
+└ androidTest/ <span class="c">← 集成测试（设备）</span></pre>
+      <h3 class="sub">依赖</h3>
+<pre>testImplementation(libs.junit)   <span class="c">// 4.13.2</span>
+testImplementation(libs.truth)   <span class="c">// 1.4.4</span></pre>
+    </div>
+    <div>
+      <h3 class="sub">JUnit4 注解 & Truth 断言</h3>
+      <table class="data">
+        <tr><th>注解</th><th>作用</th></tr>
+        <tr><td><code>@Test</code></td><td>标记测试方法</td></tr>
+        <tr><td><code>@Before/@After</code></td><td>每个测试前/后</td></tr>
+        <tr><td><code>@BeforeClass</code></td><td>类级仅一次</td></tr>
+        <tr><td><code>@Ignore</code></td><td>跳过</td></tr>
+      </table>
+<pre>assertThat(r).isEqualTo(expected)
+assertThat(list).containsExactly(<span class="s">"a"</span>,<span class="s">"b"</span>).inOrder()
+assertThat(n).isWithin(0.01f).of(0.5f)</pre>
+    </div>
+  </div>
+
+  <h3 class="sub">本项目 Stage 1 实例（纯逻辑，零依赖）</h3>
+  <div class="cols">
+    <div>
+<pre><span class="c">// WordCountTest 中英混合字数</span>
+<span class="k">class</span> WordCountTest {
+  @Test <span class="k">fun</span> `chinese counted by char`() {
+    assertThat(wordCount(<span class="s">"你好世界"</span>)).isEqualTo(4)
+  }
+  @Test <span class="k">fun</span> `mixed cn en`() {
+    assertThat(wordCount(<span class="s">"你好 world"</span>)).isEqualTo(3)
+  }
+}</pre>
+    </div>
+    <div>
+<pre><span class="c">// MarkdownToolbarExtendedTest</span>
+@Test <span class="k">fun</span> `bold wraps`() {
+  <span class="k">val</span> (t,_) = MarkdownToolbar.applyBold(<span class="s">"hello"</span>,0,5)
+  assertThat(t).isEqualTo(<span class="s">"**hello**"</span>)
+}
+<span class="c">// DomainModelsTest</span>
+@Test <span class="k">fun</span> `note in trash flag`() {
+  <span class="k">val</span> n = Note(title=<span class="s">"t"</span>,content=<span class="s">"c"</span>,deletedAt=1L)
+  assertThat(n.isInTrash).isTrue()
+}</pre>
+    </div>
+  </div>
+
+  <h3 class="sub">运行 & Stage1 覆盖内容（117 用例）</h3>
+  <div class="cols">
+    <div>
+<pre>.\gradlew.bat :app:testDebugUnitTest
+<span class="c"># 只跑 Stage1</span>
+.\gradlew.bat :app:testDebugUnitTest `
+  --tests <span class="s">"com.zhuji.note.stage1.*"</span></pre>
+    </div>
+    <div>
+      <span class="tag">WordCount 字数</span><span class="tag">DomainModels 数据类</span><span class="tag">NoteFilter 筛选</span>
+      <span class="tag">Formatter 时间/预览</span><span class="tag">NoteStatistics 统计</span><span class="tag">BiLinkParser 双链</span>
+      <span class="tag">MarkdownToolbar 16项</span><span class="tag">TemplateEngine 模板</span><span class="tag">Pomodoro 番茄钟</span>
+      <span class="tag a">AiApplyStrategy 合并策略</span><span class="tag a">AiSerialization 序列化</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 MockK ============ -->
+<section class="newpage">
+  <h2 class="sec">04　Mock 测试 — MockK<span class="cn">L06 · Mocking</span></h2>
+
+  <p>被测代码依赖数据库/网络/系统服务时，<strong>Mock</strong> 用虚拟对象替代真实依赖，让测试只关注当前类逻辑，避免外部环境不稳定导致失败。</p>
+
+  <div class="cols">
+    <div>
+      <h3 class="sub">核心 API</h3>
+      <table class="data">
+        <tr><th>API</th><th>作用</th></tr>
+        <tr><td><code>mockk&lt;T&gt;()</code></td><td>严格 mock</td></tr>
+        <tr><td><code>relaxUnitFun=true</code></td><td>Unit 方法放行</td></tr>
+        <tr><td><code>every{…} returns</code></td><td>打桩返回值</td></tr>
+        <tr><td><code>coEvery{…}</code></td><td>打桩挂起函数</td></tr>
+        <tr><td><code>coJustRun{…}</code></td><td>挂起无返回</td></tr>
+        <tr><td><code>coVerify(exactly=N)</code></td><td>验证调用次数</td></tr>
+        <tr><td><code>slot&lt;T&gt;()+capture()</code></td><td>捕获参数</td></tr>
+        <tr><td><code>mockkObject(O)</code></td><td>mock 单例</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3 class="sub">Repository 测试（mock DAO）</h3>
+<pre><span class="k">val</span> noteDao = mockk&lt;NoteDao&gt;(relaxUnitFun=<span class="k">true</span>)
+@Test <span class="k">fun</span> `upsert inserts and refreshes tags`() = runTest {
+  coEvery { noteDao.insert(any()) } returns 42L
+  coJustRun { noteDao.clearCross(any()) }
+  <span class="k">val</span> repo = NoteRepositoryImpl(noteDao, tagDao)
+  <span class="k">val</span> id = repo.upsert(Note(<span class="s">"t"</span>,<span class="s">"c"</span>,tagIds=listOf(7L,8L)))
+  assertThat(id).isEqualTo(42L)
+  coVerify(exactly=1) { noteDao.insert(any()) }
+  coVerify(exactly=2) { noteDao.insertCross(any()) }
+}</pre>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3 class="sub">UseCase 测试</h3>
+<pre>@Test <span class="k">fun</span> `SaveNote rejects empty`() = runTest {
+  <span class="k">val</span> repo = mockk&lt;NoteRepository&gt;(relaxUnitFun=<span class="k">true</span>)
+  <span class="k">val</span> res = SaveNoteUseCase(repo)(Note(<span class="s">""</span>,<span class="s">""</span>))
+  assertThat(res.isFailure).isTrue()
+}</pre>
+      <h3 class="sub">Turbine 测 Flow</h3>
+<pre>repo.observeNotes(NoteFilter()).test {
+  assertThat(awaitItem()).isEmpty()
+  cancelAndIgnoreRemainingEvents()
+}</pre>
+    </div>
+    <div>
+      <h3 class="sub">MockWebServer 测 SSE 流式</h3>
+<pre><span class="c">// DeepSeekClientTest</span>
+server = MockWebServer().also { it.start() }
+client = DeepSeekClient(OkHttpClient(), json,
+  baseUrl = server.url(<span class="s">"/"</span>).toString().trimEnd('/'))
+
+<span class="k">val</span> body = listOf(
+ <span class="s">"""data: {"choices":[{"delta":{"content":"你"}}]}"""</span>,
+ <span class="s">"""data: {"choices":[{"delta":{"content":"好"}}]}"""</span>,
+ <span class="s">"data: [DONE]"</span>).joinToString(<span class="s">"\n\n"</span>)
+server.enqueue(MockResponse().setBody(body)
+  .addHeader(<span class="s">"Content-Type"</span>,<span class="s">"text/event-stream"</span>))</pre>
+    </div>
+  </div>
+
+  <h3 class="sub">Stage 2 覆盖内容（53 用例）</h3>
+  <span class="tag">NoteRepositoryImpl CRUD</span><span class="tag">ExtendedRepository 排序/统计</span><span class="tag">RepositoryEdgeCases 边界</span>
+  <span class="tag">UseCases 用例层</span><span class="tag a">DeepSeekClient SSE 流式</span><span class="tag a">DeepSeekClient 401/429</span>
+  <span class="tag">PomodoroState 状态机</span><span class="tag">WritingGoal 写作目标</span>
+</section>
+
+<!-- ============ 05 覆盖率 ============ -->
+<section class="newpage">
+  <h2 class="sec">05　测试覆盖率 — JaCoCo + Robolectric<span class="cn">L07 · Coverage</span></h2>
+
+  <div class="cols">
+    <div>
+      <p>覆盖率回答「测了多少代码」：<strong>语句覆盖</strong>（行）、<strong>分支覆盖</strong>（if/when 分支）、<strong>方法覆盖</strong>。</p>
+      <h3 class="sub">JaCoCo 配置</h3>
+<pre>plugins { jacoco }
+jacoco { toolVersion = <span class="s">"0.8.12"</span> }</pre>
+      <h3 class="sub">三阶段独立采集</h3>
+<pre><span class="k">val</span> stages = listOf(<span class="s">"stage1"</span>,<span class="s">"stage2"</span>,<span class="s">"stage3"</span>)
+afterEvaluate {
+  stages.forEach { <span class="c">/* testStageN → 独立 .exec
+                       jacocoStageNReport */</span> }
+  <span class="c">// jacocoCumulativeReport：合并 3 个 .exec</span>
+}</pre>
+    </div>
+    <div>
+      <h3 class="sub">运行</h3>
+<pre>.\gradlew.bat :app:jacocoStage1Report `
+  :app:jacocoStage2Report :app:jacocoStage3Report
+.\gradlew.bat :app:jacocoCumulativeReport
+<span class="c"># 报告 → app/build/reports/coverage/
+#         cumulative/html/index.html</span></pre>
+      <h3 class="sub">排除规则</h3>
+<pre>val excludes = listOf(
+  <span class="s">"**/R.class"</span>, <span class="s">"**/*Hilt_*.*"</span>, <span class="s">"**/di/**"</span>,
+  <span class="s">"**/ui/screens/**"</span>, <span class="s">"**/ui/theme/**"</span>)
+<span class="c">// UI 层由 Espresso 集成测试覆盖</span></pre>
+    </div>
+  </div>
+
+  <h3 class="sub">覆盖率递进</h3>
+  <table class="data">
+    <tr><th style="width:18%">阶段</th><th style="width:32%">工具</th><th>新增覆盖范围</th></tr>
+    <tr><td class="first">Stage 1</td><td>纯 JUnit</td><td>domain 工具类（格式化/解析/统计）</td></tr>
+    <tr><td class="first">Stage 2</td><td>+ MockK + MockWebServer</td><td>Repository + UseCase + AI 客户端业务编排</td></tr>
+    <tr><td class="first">Stage 3</td><td>+ Robolectric</td><td>Room 真实 SQL + DataStore + Theme/Color 解析</td></tr>
+  </table>
+
+  <h3 class="sub">Robolectric — JVM 上模拟 Android Runtime</h3>
+  <div class="cols">
+    <div>
+      <p>纯 JUnit 无法访问 Android Framework（Room <code>_Impl</code>、Color、资源）。Robolectric 在 JVM 模拟运行时，无需模拟器即可测这些代码。</p>
+<pre>testImplementation(libs.robolectric)  <span class="c">// 4.13</span></pre>
+    </div>
+    <div>
+<pre>@RunWith(RobolectricTestRunner::<span class="k">class</span>)
+@Config(sdk = [33])
+<span class="k">class</span> RoomDatabaseTest {
+  @Before <span class="k">fun</span> create() {
+    db = Room.inMemoryDatabaseBuilder(ctx,
+      ZhujiDatabase::<span class="k">class</span>.java)
+      .allowMainThreadQueries().build()
+  }
+  @Test <span class="k">fun</span> `insert and observe`() = runTest {
+    <span class="k">val</span> id = db.noteDao().insert(NoteEntity(…))
+    assertThat(db.noteDao().observeAll().first()
+      .first().id).isEqualTo(id)
+  }
+}</pre>
+    </div>
+  </div>
+  <div class="note"><b>Stage3（18 用例）</b>　RoomDatabaseTest（CRUD/软删/搜索/聚合）· UserPreferencesDataStoreTest（主题/Key/字号）· ThemeAndComposeTest（亮暗 ColorScheme + Typography）。Robolectric 镜像可设 <code>robolectric.dependency.repo.url</code> 指向阿里云加速。</div>
+</section>
+
+<!-- ============ 06 Espresso ============ -->
+<section class="newpage">
+  <h2 class="sec">06　集成测试 — Espresso<span class="cn">L08 · Integration</span></h2>
+
+  <p>集成测试验证多模块协作，跑在<strong>真实设备/模拟器</strong>，测 UI 交互、Activity 导航、组件间数据传递。</p>
+
+  <table class="data">
+    <tr><th>维度</th><th>单元测试</th><th>集成测试</th></tr>
+    <tr><td class="first">运行环境</td><td>JVM</td><td>设备 / 模拟器</td></tr>
+    <tr><td class="first">目录</td><td><code>src/test/</code></td><td><code>src/androidTest/</code></td></tr>
+    <tr><td class="first">依赖声明</td><td><code>testImplementation</code></td><td><code>androidTestImplementation</code></td></tr>
+    <tr><td class="first">运行命令</td><td><code>gradlew test</code></td><td><code>gradlew connectedAndroidTest</code></td></tr>
+    <tr><td class="first">验证重点</td><td>逻辑正确性</td><td>UI 交互 + 组件协作</td></tr>
+  </table>
+
+  <div class="cols">
+    <div>
+      <h3 class="sub">依赖 + Hilt Runner</h3>
+<pre>androidTestImplementation(libs.espresso.core)
+androidTestImplementation(libs.espresso.intents)
+androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+androidTestImplementation(libs.hilt.android.testing)
+
+<span class="c">// build.gradle.kts</span>
+testInstrumentationRunner =
+  <span class="s">"com.zhuji.note.HiltTestRunner"</span></pre>
+      <h3 class="sub">核心 API</h3>
+      <table class="data">
+        <tr><th>API</th><th>作用</th></tr>
+        <tr><td><code>onNodeWithText("…")</code></td><td>按文本找</td></tr>
+        <tr><td><code>onNodeWithContentDescription</code></td><td>按描述找</td></tr>
+        <tr><td><code>.performClick()</code></td><td>点击</td></tr>
+        <tr><td><code>.performTextInput("…")</code></td><td>输入</td></tr>
+        <tr><td><code>.assertExists()</code></td><td>断言存在</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3 class="sub">本项目 EditorE2ETest</h3>
+<pre>@HiltAndroidTest
+@RunWith(AndroidJUnit4::<span class="k">class</span>)
+<span class="k">class</span> EditorE2ETest {
+  @get:Rule(order=0) <span class="k">val</span> hilt = HiltAndroidRule(<span class="k">this</span>)
+  @get:Rule(order=1) <span class="k">val</span> rule =
+    createAndroidComposeRule&lt;MainActivity&gt;()
+
+  @Before <span class="k">fun</span> setup() {
+    hilt.inject()
+    rule.awaitContentDescription(<span class="s">"新笔记"</span>)
+  }
+  @Test <span class="k">fun</span> editorTitleInput() {
+    rule.onNodeWithContentDescription(<span class="s">"新笔记"</span>).performClick()
+    rule.awaitText(<span class="s">"标题"</span>)
+    rule.onNode(hasText(<span class="s">"标题"</span>)).performTextInput(<span class="s">"My Title"</span>)
+    rule.onNodeWithText(<span class="s">"My Title"</span>).assertExists()
+  }
+}</pre>
+    </div>
+  </div>
+
+  <h3 class="sub">集成测试清单（37 用例）& 运行</h3>
+  <div class="cols">
+    <div>
+      <table class="data">
+        <tr><th>测试类</th><th class="num">用例</th></tr>
+        <tr><td>EditorE2ETest</td><td class="num">10</td></tr>
+        <tr><td>NavigationE2ETest</td><td class="num">10</td></tr>
+        <tr><td>NoteFlowE2ETest</td><td class="num">10</td></tr>
+        <tr><td>CommonComposeTest</td><td class="num">3</td></tr>
+        <tr><td>ThemeRendersTest</td><td class="num">2</td></tr>
+        <tr><td>MainActivityIntegrationTest</td><td class="num">2</td></tr>
+      </table>
+    </div>
+    <div>
+<pre>.\scripts\start_avd.ps1
+.\gradlew.bat :app:connectedDebugAndroidTest
+<span class="c"># 报告 → app/build/reports/
+#         androidTests/connected/index.html</span></pre>
+      <div class="note"><b>防 flaky</b>　<code>animationsDisabled=true</code> + start_avd 关闭三项动画 scale；用 <code>awaitText/awaitContentDescription</code> 替代硬 sleep；<code>ActivityScenarioRule</code> 自动隔离状态。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 07 Jenkins ============ -->
+<section class="newpage">
+  <h2 class="sec">07　持续集成 — Jenkins<span class="cn">L09 · Continuous Integration</span></h2>
+
+  <div class="cols">
+    <div>
+      <p><strong>CI</strong>：频繁提交，每次自动构建+测试，尽早发现集成问题。四要素：版本控制 · 自动化构建 · 自动化测试 · 报告通知。</p>
+      <h3 class="sub">安装 & 初始化</h3>
+<pre>java -jar jenkins.war --httpPort=8080
+<span class="c"># 1. 取 initialAdminPassword 解锁
+# 2. 安装推荐插件(git/gradle/pipeline)
+# 3. 创建管理员 → 配置 URL</span></pre>
+      <h3 class="sub">Android 工具配置</h3>
+      <ul>
+        <li>JDK → JBR 21</li>
+        <li>Gradle → 用项目自带 Wrapper</li>
+        <li>环境变量 <code>ANDROID_HOME</code> → SDK</li>
+      </ul>
+      <h3 class="sub">启动（支持本地仓库）</h3>
+<pre>java -Dhudson.plugins.git.GitSCM.
+  ALLOW_LOCAL_CHECKOUT=true `
+  -jar jenkins.war --httpPort=8080</pre>
+    </div>
+    <div>
+      <h3 class="sub">本项目 Jenkinsfile（声明式）</h3>
+<pre><span class="k">pipeline</span> {
+  agent any
+  environment {
+    ANDROID_HOME = <span class="s">'…\\Android\\Sdk'</span>
+    JAVA_HOME    = <span class="s">'…\\AndroidStudio\\jbr'</span>
+  }
+  stages {
+    stage(<span class="s">'Checkout'</span>) { steps { checkout scm } }
+    stage(<span class="s">'Setup'</span>) { steps {
+      bat <span class="s">'echo sdk.dir=… &gt; local.properties'</span> } }
+    stage(<span class="s">'Build APK'</span>) { steps {
+      bat <span class="s">'.\\gradlew.bat :app:assembleDebug'</span> } }
+    stage(<span class="s">'Tests + JaCoCo'</span>) {
+      steps { bat <span class="s">'.\\gradlew.bat …jacocoCumulativeReport'</span> }
+      post { always {
+        junit <span class="s">'app/build/test-results/**/*.xml'</span>
+        publishHTML(<span class="c">/* JaCoCo cumulative */</span>) } }
+    }
+    stage(<span class="s">'Archive APK'</span>) { steps {
+      archiveArtifacts <span class="s">'…/debug/*.apk'</span> } }
+  }
+}</pre>
+    </div>
+  </div>
+
+  <h3 class="sub">Pipeline 各阶段</h3>
+  <table class="data">
+    <tr><th style="width:24%">Stage</th><th>动作</th></tr>
+    <tr><td class="first">Checkout</td><td>拉取源码</td></tr>
+    <tr><td class="first">Setup</td><td>生成 <code>local.properties</code> 指向 SDK</td></tr>
+    <tr><td class="first">Build APK</td><td>Gradle 编译 debug APK</td></tr>
+    <tr><td class="first">Tests + JaCoCo</td><td>三阶段单测 + 累积覆盖率，归档 JUnit/HTML 报告</td></tr>
+    <tr><td class="first">Archive APK</td><td>归档 APK 产物</td></tr>
+  </table>
+
+  <h3 class="sub">命令行构建（不依赖 Jenkins）</h3>
+<pre>.\gradlew.bat :app:assembleDebug              <span class="c"># 编 APK</span>
+.\gradlew.bat :app:testDebugUnitTest          <span class="c"># 188 单测</span>
+.\gradlew.bat :app:jacocoCumulativeReport     <span class="c"># 覆盖率</span>
+.\gradlew.bat :app:connectedDebugAndroidTest  <span class="c"># 37 集成(需 AVD)</span></pre>
+
+  <div class="note" style="text-align:center;font-size:11.5px;color:var(--accent);font-weight:600">
+    Git Push → Jenkins 检出 → Gradle Build → 单元测试 → JaCoCo 报告 → 归档 APK
+  </div>
+
+  <div class="footer">MT2026 移动应用测试教程 · 基于 ZhujiNote 项目 · 共 7 章覆盖 L02–L09</div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ZhujiNote 移动应用测试大作业报告</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 16mm 16mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Microsoft YaHei","PingFang SC","Noto Sans SC",Arial,Helvetica,sans-serif;
+    color: #222; font-size: 15px; line-height: 1.62; margin: 0;
+    background: #fff;
+  }
+  .accent { color: #D83A00; }
+  code, .mono { font-family: "Cascadia Code",Consolas,Menlo,Monaco,monospace; }
+  code { color: #D83A00; }
+
+  /* 封面 */
+  .cover { padding: 8mm 0 0 0; page-break-after: always; }
+  .cover h1 { font-size: 52px; font-weight: 800; color: #050505; margin: 0 0 6px; letter-spacing: -1px; }
+  .cover .sub { font-size: 23px; font-weight: 400; color: #666; margin: 0 0 14px; }
+  .cover .courseline {
+    border-top: 1px solid #ddd; border-bottom: 1px solid #ddd;
+    padding: 11px 0; margin: 14px 0 22px;
+    color: #D83A00; font-weight: 700; font-size: 15px; letter-spacing: .3px;
+  }
+  .meta-title { font-size: 21px; font-weight: 700; color: #111; margin: 18px 0 0; padding-bottom: 8px; border-bottom: 2px solid #111; }
+
+  /* 表格 */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 18px; font-size: 14px; }
+  table.meta td { padding: 7px 4px; border-bottom: 1px solid #e9e9e9; vertical-align: top; }
+  table.meta tr:last-child td { border-bottom: 2px solid #111; }
+  table.meta td.k { width: 26%; font-weight: 700; color: #111; }
+  table.data { border-top: 2px solid #222; border-bottom: 2px solid #222; }
+  table.data th {
+    font-weight: 700; color: #111; text-align: left; font-size: 13.5px;
+    padding: 9px 8px; border-bottom: 1px solid #8a8a8a; background: #fff;
+  }
+  table.data td { padding: 7px 8px; border-bottom: 1px solid #efefef; }
+  table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.data td.first { color: #D83A00; font-weight: 600; }
+  table.data td.mono { font-family: Consolas,Menlo,monospace; color: #111; font-size: 13px; }
+
+  /* 章节 */
+  h2.sec { font-size: 22px; font-weight: 800; color: #111; margin: 30px 0 4px; padding-bottom: 7px; border-bottom: 2px solid #2b2b2b; }
+  h3.sub { font-size: 17px; font-weight: 700; color: #111; margin: 22px 0 6px; }
+  h4 { font-size: 15px; font-weight: 700; color: #333; margin: 16px 0 4px; }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0 8px 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+  strong { color: #050505; }
+
+  /* 代码块 */
+  pre {
+    font-family: Consolas,Menlo,Monaco,monospace; font-size: 12.5px; line-height: 1.5;
+    color: #1a1a1a; background: #f7f7f5; border: 1px solid #e6e6e2; border-radius: 4px;
+    padding: 12px 14px; overflow-x: auto; margin: 12px 0;
+  }
+  pre .c { color: #8a8a8a; }
+  pre .k { color: #D83A00; }
+
+  /* ASCII 树 */
+  pre.tree { background: #fafafa; color: #333; font-size: 12px; }
+
+  /* 图 */
+  figure { margin: 16px 0; text-align: center; page-break-inside: avoid; }
+  figure img { max-width: 100%; border: 1px solid #e2e2e2; border-radius: 6px; }
+  figure.phone img { max-width: 280px; }
+  figure.phone-pair { display: flex; gap: 16px; justify-content: center; align-items: flex-start; }
+  figure.phone-pair img { max-width: 240px; }
+  figure.wide img { max-width: 96%; }
+  figcaption { font-size: 12.5px; color: #666; margin-top: 8px; line-height: 1.5; padding: 0 8%; }
+  .imgrow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 14px 0; }
+  .imgrow figure { margin: 0; flex: 0 0 auto; }
+  .imgrow.q3 figure img { max-width: 200px; }
+  .imgrow.q4 figure img { max-width: 165px; }
+
+  /* 页脚 */
+  .footer-note { text-align: right; color: #9b9b9b; font-size: 12px; margin-top: 6px; }
+  .pagebreak { page-break-before: always; }
+  .note { background: #fff8f4; border-left: 3px solid #D83A00; padding: 8px 12px; margin: 12px 0; font-size: 13.5px; color: #444; }
+  .kpi-row { display: flex; gap: 14px; margin: 16px 0; }
+  .kpi { flex: 1; border: 1px solid #e6e6e2; border-radius: 8px; padding: 14px; text-align: center; }
+  .kpi .v { font-size: 30px; font-weight: 800; color: #D83A00; line-height: 1; }
+  .kpi .l { font-size: 12px; color: #666; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<!-- ============ 封面 ============ -->
+<section class="cover">
+  <h1>ZhujiNote</h1>
+  <div class="sub">助记笔记 · Android 移动应用测试大作业报告</div>
+  <div class="courseline">软件 2308 · 任航瑞 / 何浩然 · 20231151051 · MT2026 移动应用测试 · 期末大作业 · 全流程测试实践</div>
+
+  <div class="meta-title">项目元信息</div>
+  <table class="meta">
+    <tr><td class="k">项目名称</td><td>ZhujiNote 助记笔记（AI 驱动的 Markdown 笔记应用）</td></tr>
+    <tr><td class="k">应用类型</td><td>Jetpack Compose 笔记 App（DeepSeek AI 集成 · 暗亮双主题 · 全文检索）</td></tr>
+    <tr><td class="k">架构分层</td><td>data / domain / di / ai / reminder / ui（Clean Architecture + 单向数据流）</td></tr>
+    <tr><td class="k">源码规模</td><td>5152 行 Kotlin（54 个源文件）</td></tr>
+    <tr><td class="k">测试规模</td><td>单元测试 1570 行（22 文件）+ 集成测试 443 行（8 文件）</td></tr>
+    <tr><td class="k">测试用例</td><td>225 个（单元 188：Stage1 117 / Stage2 53 / Stage3 18；集成 Espresso 37）</td></tr>
+    <tr><td class="k">测试通过率</td><td>100%（本地与 GitHub Actions CI 双环境全绿）</td></tr>
+    <tr><td class="k">构建工具</td><td>Gradle 8.x + AGP 8.5.2 + Kotlin 1.9.24 + KSP</td></tr>
+    <tr><td class="k">覆盖率工具</td><td>JaCoCo 0.8.x（三阶段独立 .exec + 累积报告）</td></tr>
+    <tr><td class="k">累积覆盖率</td><td>LINE 65.1% / METHOD 57.9% / BRANCH 53.4% / CLASS 49.4%</td></tr>
+    <tr><td class="k">Android SDK</td><td>compileSdk 36 / minSdk 24 / targetSdk 34</td></tr>
+    <tr><td class="k">测试框架</td><td>JUnit 4.13.2 + MockK + Robolectric + Espresso 3.6 + Compose UI Test</td></tr>
+    <tr><td class="k">AI 能力</td><td>DeepSeek deepseek-v4-flash 思考模型（SSE 流式 · reasoning/content 分轨）</td></tr>
+    <tr><td class="k">DI / 持久化</td><td>Hilt + Room（FTS4 全文索引）+ DataStore + EncryptedSharedPreferences</td></tr>
+    <tr><td class="k">UI 框架</td><td>Compose BOM + Material 3 + Navigation Compose</td></tr>
+    <tr><td class="k">CI / CD</td><td>GitHub Actions（build-test + instrumented-tests 双 Job）+ Jenkinsfile</td></tr>
+    <tr><td class="k">版本管理</td><td>27 次累积提交，里程碑留痕，无 force-push 重写历史</td></tr>
+  </table>
+  <div class="footer-note">ZhujiNote / Final Report &nbsp;·&nbsp; MT2026 &nbsp;·&nbsp; 封面</div>
+</section>
+
+<!-- ============ 1. 项目概览 ============ -->
+<section>
+  <h2 class="sec">1. 项目概览</h2>
+  <p>ZhujiNote 是一款为 <strong>MT2026 移动应用测试</strong> 课程期末大作业设计的 Android 笔记应用。它以「AI 助记」为核心理念，把一个功能完整的 Markdown 笔记本与 DeepSeek 大模型深度融合，并围绕它系统性地落地了课程 L02–L09 的全部测试能力：开发环境搭建、APK 构建安装、GUI 测试、JUnit 单元测试、MockK Mock 测试、Robolectric + JaCoCo 三阶段覆盖率、Espresso 集成测试、以及 GitHub Actions + Jenkins 双轨持续集成。</p>
+  <p>与课程前序练习（MobileTestingLab / WeatherLab / IntegrationTestLab）一脉相承，本项目在<strong>真实、可运行、功能丰富</strong>的工程上完成测试实践，而非为测试而造的玩具应用。全部 225 个测试用例（188 单元 + 37 集成）在本地与 CI 两套环境下 100% 通过。</p>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="v">5152</div><div class="l">行 Kotlin 主源码</div></div>
+    <div class="kpi"><div class="v">225</div><div class="l">测试用例全绿</div></div>
+    <div class="kpi"><div class="v">65.1%</div><div class="l">累积行覆盖率</div></div>
+    <div class="kpi"><div class="v">27</div><div class="l">次累积提交</div></div>
+  </div>
+
+  <h3 class="sub">1.1 核心功能</h3>
+  <ul>
+    <li><strong>AI 助记（核心）</strong>：编辑器内一键调用 9 类 AI 动作——总结 / 续写 / 润色 / 翻译 / 提取关键词 / 起标题 / 生成大纲 / 生成闪卡 / 基于笔记问答，外加独立的多轮 AI 对话页；全部走 DeepSeek SSE 流式，思考过程（reasoning）与最终答案（content）分轨展示。</li>
+    <li><strong>Markdown 编辑器</strong>：10 项工具栏（标题 / 加粗 / 斜体 / 代码 / 列表 / 引用 / 链接 / 双向链等）+ 实时预览 + 字数统计。</li>
+    <li><strong>笔记管理</strong>：FTS4 全文检索、标签、置顶收藏、回收站（软删除）、多选批量操作、双向链接 <code>[[笔记]]</code>。</li>
+    <li><strong>效率工具</strong>：番茄钟、写作目标、8 种笔记模板、统计图表（Canvas 自绘）、分享为图片卡片、SAF 备份导入导出、定时提醒。</li>
+    <li><strong>双主题</strong>：Claude 暖橙亮色 + Windsurf 霓虹青暗色，跟随系统或手动切换。</li>
+  </ul>
+
+  <div class="imgrow">
+    <figure class="phone"><img src="../screens/s01-home-empty-light.png" alt="亮色首页"></figure>
+    <figure class="phone"><img src="../screens/s14-home-with-note.png" alt="含笔记首页"></figure>
+    <figure class="phone"><img src="../screens/s15-home-dark.png" alt="暗色首页"></figure>
+  </div>
+  <figcaption>图 1：ZhujiNote 主界面三态。左：Claude 暖橙亮色空状态；中：含笔记列表；右：Windsurf 霓虹青暗色。顶栏提供排序、AI 助手、统计、回收站、设置与「更多」溢出菜单。</figcaption>
+
+  <h3 class="sub">1.2 项目结构</h3>
+  <p>采用 Clean Architecture 分层，源码按职责物理分包；测试按 stage1 / stage2 / stage3 物理分包，天然对应 JaCoCo 三阶段统计。</p>
+  <pre class="tree">app/src
+├── main/java/com/zhuji/note
+│   ├── MainActivity.kt              <span class="c"># @AndroidEntryPoint 单 Activity 入口</span>
+│   ├── ZhujiApp.kt                  <span class="c"># @HiltAndroidApp + Navigation 路由</span>
+│   ├── ai/                          <span class="c"># DeepSeekClient(SSE) + 9 类 AI 动作 + AiApplyStrategy</span>
+│   ├── data/
+│   │   ├── local/db/                <span class="c"># Room + NotesFTS 全文索引 + DAO</span>
+│   │   ├── local/preferences/       <span class="c"># DataStore + EncryptedSharedPreferences(Key)</span>
+│   │   ├── backup/                  <span class="c"># BackupExporter（SAF ZIP 导入导出）</span>
+│   │   └── repository/              <span class="c"># NoteRepositoryImpl（SQL 原生排序）</span>
+│   ├── domain/
+│   │   ├── model/                   <span class="c"># Note / Tag / Folder 等领域模型</span>
+│   │   ├── usecase/                 <span class="c"># 业务用例</span>
+│   │   └── util/                    <span class="c"># Markdown / TemplateEngine / BiLinkParser</span>
+│   ├── di/                          <span class="c"># Hilt Module</span>
+│   ├── reminder/                    <span class="c"># AlarmManager + 通知通道</span>
+│   └── ui/
+│       ├── theme/                   <span class="c"># Claude+Windsurf ColorScheme/Type/Shape</span>
+│       ├── common/                  <span class="c"># Loading / PressableScale / 微动效组件</span>
+│       └── screens/{notes,edit,settings,stats,trash,ai,
+│                    pomodoro,goal,template,multiselect}/
+├── test/java/com/zhuji/note         <span class="c"># 三阶段单元测试（188 用例）</span>
+│   ├── stage1/  <span class="c"># 纯 JUnit（117）  stage2/ +MockK（53）  stage3/ +Robolectric（18）</span>
+└── androidTest/java/com/zhuji/note  <span class="c"># Espresso + Compose UI Test（37）</span></pre>
+  <div class="footer-note">ZhujiNote / Final Report &nbsp;·&nbsp; MT2026 &nbsp;·&nbsp; §1 项目概览</div>
+</section>
+
+<!-- ============ 2. 开发环境（L02） ============ -->
+<section class="pagebreak">
+  <h2 class="sec">2. 开发环境（对应 L02）</h2>
+  <p>本项目全部工具链安装在 D 盘，环境配置如下表。开发构建在 ASCII 路径 <code>D:\Projects\zhuji_note</code> 下执行（中文路径会导致 Robolectric 抛 ClassNotFoundException），Git 仓库副本位于作业目录用于推送。</p>
+  <table class="data">
+    <tr><th>组件</th><th>版本 / 路径</th></tr>
+    <tr><td class="first">Android Studio</td><td>D:\Softwares\AndroidStudio（含 JBR 21）</td></tr>
+    <tr><td class="first">JDK</td><td>OpenJDK 21（项目 jvmTarget=21，CI 同用 temurin 21）</td></tr>
+    <tr><td class="first">Android SDK</td><td>build-tools 36 / platform-tools / emulator / platforms;android-36</td></tr>
+    <tr><td class="first">Gradle / AGP</td><td>Gradle 8.x（Wrapper）+ AGP 8.5.2 + Kotlin 1.9.24 + KSP</td></tr>
+    <tr><td class="first">AVD</td><td>zhuji_avd（Pixel · API 34 · x86_64），AEHD hypervisor 提供硬件加速</td></tr>
+    <tr><td class="first">镜像加速</td><td>阿里云 Maven 镜像（解决 Maven Central 403）；Robolectric android-all jar 指向阿里云</td></tr>
+  </table>
+  <div class="note">工程注脚：AVD 启动需 AEHD（Android Emulator Hypervisor Driver）提供 x86_64 硬件加速，以管理员身份运行 SDK 下 <code>silent_install.bat</code> 安装。长驻进程（emulator）以独立进程方式启动，避免阻塞父 shell。</div>
+
+  <h3 class="sub">2.1 构建产物运行验证</h3>
+  <figure class="phone"><img src="../screens/w01-home-empty.png" alt="App 安装运行"></figure>
+  <figcaption>图 2：<code>assembleDebug</code> 产出 app-debug.apk 后经 <code>adb install</code> 装入 zhuji_avd 并启动，主界面正常渲染——证明开发环境（SDK / Gradle / AVD / 硬件加速）端到端打通。</figcaption>
+</section>
+
+<!-- ============ 3. APK 构建与安装（L03） ============ -->
+<section class="pagebreak">
+  <h2 class="sec">3. APK 构建与安装（对应 L03）</h2>
+  <p>使用 Gradle Wrapper 构建 Debug APK 并安装到模拟器，命令如下：</p>
+  <pre>.\gradlew.bat :app:assembleDebug                                  <span class="c"># 编译打包 Debug APK</span>
+adb install -r app\build\outputs\apk\debug\app-debug.apk          <span class="c"># 安装（-r 覆盖）</span>
+adb shell am start -n com.zhuji.note/.MainActivity                <span class="c"># 启动主 Activity</span></pre>
+  <table class="data">
+    <tr><th>维度</th><th>数据</th></tr>
+    <tr><td class="first">构建命令</td><td class="mono">gradlew :app:assembleDebug</td></tr>
+    <tr><td class="first">产物路径</td><td class="mono">app/build/outputs/apk/debug/app-debug.apk</td></tr>
+    <tr><td class="first">应用包名</td><td class="mono">com.zhuji.note</td></tr>
+    <tr><td class="first">minSdk / target / compile</td><td>24 / 34 / 36</td></tr>
+    <tr><td class="first">安装目标</td><td>zhuji_avd（Android 14 / API 34 / x86_64）</td></tr>
+  </table>
+  <figcaption>注：CI 环境（GitHub Actions build-test job）同样执行 assembleDebug 并将 APK 作为构建工件归档，详见第 9 章。</figcaption>
+  <div class="footer-note">ZhujiNote / Final Report &nbsp;·&nbsp; MT2026 &nbsp;·&nbsp; §2-3 环境与构建</div>
+</section>
+
+<!-- ============ 4. GUI 测试与功能走查（L04） ============ -->
+<section class="pagebreak">
+  <h2 class="sec">4. GUI 测试与功能走查（对应 L04）</h2>
+  <p>为验证测试覆盖的代码确实在真机上工作，将 APK 装入 AVD 后对全部功能路径做了手动 QA，并逐屏截图。以下按功能模块组织，所有截图均为 zhuji_avd 模拟器实拍。</p>
+
+  <h3 class="sub">4.1 编辑器与 Markdown</h3>
+  <div class="imgrow">
+    <figure class="phone"><img src="../screens/s02-new-note-editor.png" alt="新建笔记"></figure>
+    <figure class="phone"><img src="../screens/s03-editor-title-typed.png" alt="输入标题"></figure>
+    <figure class="phone"><img src="../screens/s05-editor-h1-applied.png" alt="H1 标题"></figure>
+    <figure class="phone"><img src="../screens/s06-editor-bold.png" alt="加粗"></figure>
+  </div>
+  <figcaption>图 3：编辑器交互流。新建空笔记 → 输入标题 → 应用 H1 标题样式 → 加粗。底部 Markdown 工具栏 10 项随手可点，实时字数统计显示在顶部。</figcaption>
+
+  <h3 class="sub">4.2 设置与 AI 连通性</h3>
+  <div class="imgrow q4">
+    <figure class="phone"><img src="../screens/w02-settings-top.png" alt="设置页"></figure>
+    <figure class="phone"><img src="../screens/w03-settings-key-typed.png" alt="输入Key"></figure>
+    <figure class="phone"><img src="../screens/w05-settings-balance.png" alt="余额验证"></figure>
+    <figure class="phone"><img src="../screens/w06-settings-model.png" alt="模型选择"></figure>
+  </div>
+  <figcaption>图 4：设置页 AI 配置流。输入 DeepSeek API Key → 点「保存并验证」→ 顶部进度条 → 实时返回账户余额（CNY），证明真实连通而非 Mock → 模型下拉可选 deepseek-v4-flash / pro。API Key 经 EncryptedSharedPreferences 加密落盘。</figcaption>
+
+  <h3 class="sub">4.3 统计 / 回收站 / 暗色</h3>
+  <div class="imgrow">
+    <figure class="phone"><img src="../screens/s20-stats-light.png" alt="统计页"></figure>
+    <figure class="phone"><img src="../screens/s22-trash-empty.png" alt="回收站"></figure>
+    <figure class="phone"><img src="../screens/s18-settings-dark.png" alt="暗色设置"></figure>
+  </div>
+  <figcaption>图 5：左：统计页（Canvas 自绘字数趋势 + 写作维度）；中：回收站空状态；右：暗色设置页。亮暗双主题全屏适配。</figcaption>
+
+  <h3 class="sub">4.4 效率工具集</h3>
+  <div class="imgrow q4">
+    <figure class="phone"><img src="../screens/qa-pomodoro.png" alt="番茄钟"></figure>
+    <figure class="phone"><img src="../screens/qa-goal.png" alt="写作目标"></figure>
+    <figure class="phone"><img src="../screens/qa-template-picker.png" alt="模板选择"></figure>
+    <figure class="phone"><img src="../screens/qa-multiselect-mode.png" alt="多选模式"></figure>
+  </div>
+  <figcaption>图 6：效率工具。番茄钟计时器、写作目标追踪、8 种笔记模板选择器、多选批量操作模式（长按进入）。均由顶栏「更多」溢出菜单进入。</figcaption>
+  <div class="imgrow q3">
+    <figure class="phone"><img src="../screens/qa-template-diary-note.png" alt="模板预填"></figure>
+    <figure class="phone"><img src="../screens/qa-share-image.png" alt="分享图片"></figure>
+    <figure class="phone"><img src="../screens/qa-saf-export-done.png" alt="SAF导出"></figure>
+  </div>
+  <figcaption>图 7：左：日记模板预填（TemplateEngine 渲染 <code>{{date}}</code> 等占位符）；中：分享为图片卡片（FileProvider）；右：SAF 备份导出 ZIP 完成。</figcaption>
+  <div class="footer-note">ZhujiNote / Final Report &nbsp;·&nbsp; MT2026 &nbsp;·&nbsp; §4 GUI 测试</div>
+</section>
+
+<!-- ============ 5. AI 能力深度展示 ============ -->
+<section class="pagebreak">
+  <h2 class="sec">5. AI 能力深度展示（项目核心）</h2>
+  <p>AI 是 ZhujiNote 的灵魂。编辑器右下角 ✨ 浮动按钮唤出 AI 抽屉，9 类动作横向排列。每类动作都把当前笔记内容拼成专属 prompt 发给 DeepSeek，流式接收并分轨渲染——思考过程（reasoning_content）先以可折叠卡片展开，最终答案（content）到达后思考自动收起标注「已深度思考」。</p>
+
+  <h3 class="sub">5.1 AI 抽屉与流式总结</h3>
+  <div class="imgrow q4">
+    <figure class="phone"><img src="../screens/22-ai-sheet.png" alt="AI抽屉"></figure>
+    <figure class="phone"><img src="../screens/23-ai-streaming.png" alt="流式中"></figure>
+    <figure class="phone"><img src="../screens/24-ai-result.png" alt="结果"></figure>
+    <figure class="phone"><img src="../screens/25-ai-finished.png" alt="完成"></figure>
+  </div>
+  <figcaption>图 8：AI 总结全流程。唤出抽屉 → 思考中流式输出 → 答案逐字到达 → 完成后「应用到笔记 / 复制」按钮可达。底部按钮通过 skipPartiallyExpanded 全展开布局保证永远可点。</figcaption>
+
+  <h3 class="sub">5.2 九类 AI 动作总览</h3>
+  <p>下列九张图为九类 AI 动作各自的实拍结果，覆盖 AI 能力的完整矩阵：</p>
+  <div class="imgrow q3">
+    <figure class="phone"><img src="../screens/ai-01-summarize.png" alt="总结"></figure>
+    <figure class="phone"><img src="../screens/ai-02-continue.png" alt="续写"></figure>
+    <figure class="phone"><img src="../screens/ai-03-polish.png" alt="润色"></figure>
+  </div>
+  <div class="imgrow q3">
+    <figure class="phone"><img src="../screens/ai-04-translate.png" alt="翻译"></figure>
+    <figure class="phone"><img src="../screens/ai-05-keywords.png" alt="关键词"></figure>
+    <figure class="phone"><img src="../screens/ai-06-title.png" alt="起标题"></figure>
+  </div>
+  <div class="imgrow q3">
+    <figure class="phone"><img src="../screens/ai-07-outline.png" alt="大纲"></figure>
+    <figure class="phone"><img src="../screens/ai-08-flashcards.png" alt="闪卡"></figure>
+    <figure class="phone"><img src="../screens/ai-09-qa.png" alt="问答"></figure>
+  </div>
+  <figcaption>图 9：九类 AI 动作实拍。① 总结 ② 续写 ③ 润色 ④ 翻译 ⑤ 提取关键词 ⑥ 起标题 ⑦ 生成大纲 ⑧ 生成闪卡 ⑨ 基于笔记问答。问答模式带独立问题输入框。</figcaption>
+
+  <h3 class="sub">5.3 AI 结果的语义化应用</h3>
+  <div class="imgrow">
+    <figure class="phone"><img src="../screens/ai-06-title.png" alt="起标题前"></figure>
+    <figure class="phone"><img src="../screens/ai-06-title-applied.png" alt="起标题后"></figure>
+    <figure class="phone"><img src="../screens/ai-04-translate-applied.png" alt="翻译应用后"></figure>
+  </div>
+  <figcaption>图 10：「应用到笔记」按动作语义分流（纯函数 AiApplyStrategy）。起标题 → 替换标题字段（非追加正文）；润色 / 翻译 → 替换正文；其余 → 追加正文。左→中：起标题应用后标题被替换；右：翻译应用后正文被译文替换。</figcaption>
+
+  <h3 class="sub">5.4 多轮 AI 对话</h3>
+  <div class="imgrow q4">
+    <figure class="phone"><img src="../screens/40-ai-chat-empty.png" alt="对话空"></figure>
+    <figure class="phone"><img src="../screens/41-ai-chat-streaming.png" alt="对话流式"></figure>
+    <figure class="phone"><img src="../screens/42-ai-chat-result.png" alt="对话结果"></figure>
+    <figure class="phone"><img src="../screens/43-ai-chat-dark.png" alt="对话暗色"></figure>
+  </div>
+  <figcaption>图 11：独立 AI 对话页（顶栏 AI 助手入口）。支持多轮上下文对话，流式输出，亮暗双主题。</figcaption>
+
+  <h3 class="sub">5.5 关键工程问题与解决</h3>
+  <table class="data">
+    <tr><th>问题</th><th>现象</th><th>根因与解决</th></tr>
+    <tr><td class="first">流式卡死</td><td>AI 只输出几个字就停住</td><td>OkHttp 默认发 <code>Accept-Encoding: gzip</code>，DeepSeek gzip 压缩 SSE 后 readUtf8Line() 须等整个 block 才出一行。强制 <code>Accept-Encoding: identity</code> 后修复，227 个 chunk 在 4 秒内全部到达。</td></tr>
+    <tr><td class="first">思考参数 400</td><td>missing field type</td><td>ThinkingConfig.type 有 Kotlin 默认值，encodeDefaults=false 时被省略。去掉默认值强制序列化。</td></tr>
+    <tr><td class="first">主线程网络</td><td>NetworkOnMainThreadException</td><td>同步 .execute() 未切线程，全部网络调用包 <code>withContext(Dispatchers.IO)</code>。</td></tr>
+    <tr><td class="first">空答案</td><td>finish_reason=length</td><td>思考模型 maxTokens 不足，提升至 16384，reasoning_effort 设 low。</td></tr>
+  </table>
+  <div class="footer-note">ZhujiNote / Final Report &nbsp;·&nbsp; MT2026 &nbsp;·&nbsp; §5 AI 能力</div>
+</section>
+
+<!-- ============ 6. 单元测试三阶段与覆盖率（L05/L06/L07） ============ -->
+<section class="pagebreak">
+  <h2 class="sec">6. 单元测试三阶段与 JaCoCo 覆盖率（对应 L05–L07）</h2>
+  <p>测试按 <code>stage1 / stage2 / stage3</code> 物理分包，<code>app/build.gradle.kts</code> 通过 <code>afterEvaluate</code> 动态注册三个独立 Test task（按包过滤）与对应 JacocoReport，各阶段写入独立 <code>.exec</code>，再由 <code>jacocoCumulativeReport</code> 合并三份 exec 给出整体覆盖。类目录过滤排除 R / BuildConfig / Hilt_* / *_Impl* / ComposableSingletons / di 生成代码，并整体排除 <code>ui</code> 包（Compose UI 由 Espresso 集成测试覆盖，属业界标准）。</p>
+
+  <h3 class="sub">6.1 Stage 1：纯 JUnit（117 用例）</h3>
+  <p>零依赖纯逻辑测试：domain 层 Markdown 解析、TemplateEngine 占位符渲染、BiLinkParser 双向链解析、AiApplyStrategy 语义合并、数据模型往返，全用 <code>assertEquals / assertTrue</code>，无 Mock、无 Android。</p>
+  <table class="data">
+    <tr><th>测试类（节选）</th><th class="num">用例</th><th>覆盖范围</th></tr>
+    <tr><td class="mono">MarkdownTest</td><td class="num">多</td><td>标题/加粗/列表/代码/引用/链接解析</td></tr>
+    <tr><td class="mono">TemplateEngineTest</td><td class="num">多</td><td>8 种模板 + <code>{{date}}</code> 等占位符替换</td></tr>
+    <tr><td class="mono">AiApplyStrategyTest</td><td class="num">10</td><td>标题替换/正文替换/追加三类语义规则</td></tr>
+    <tr><td class="mono">BiLinkParserTest</td><td class="num">多</td><td><code>[[笔记]]</code> 双向链提取</td></tr>
+    <tr><td class="first" style="color:#111;font-weight:700">Stage 1 合计</td><td class="num"><strong>117</strong></td><td>domain / util 纯逻辑层</td></tr>
+  </table>
+
+  <h3 class="sub">6.2 Stage 2：+ MockK（53 用例）</h3>
+  <p>引入 MockK 隔离 Repository 的 Room/DataStore 依赖、隔离 ViewModel 的 UseCase 依赖；配 <code>StandardTestDispatcher</code> + MainCoroutineRule 让 viewModelScope 在测试中可控。直接构造各种边界：AI SSE 解析分支、API 异常路径、空 Flow 种子逻辑、BackupExporter 序列化。</p>
+  <table class="data">
+    <tr><th>MockK API</th><th>用途</th></tr>
+    <tr><td class="mono">coEvery { } returns / throws</td><td>挂起函数打桩，含异常路径</td></tr>
+    <tr><td class="mono">coVerify(exactly = N) { }</td><td>协程方法调用次数验证</td></tr>
+    <tr><td class="mono">slot&lt;T&gt;() + capture()</td><td>捕获实参做断言</td></tr>
+    <tr><td class="mono">mockk(relaxed = true)</td><td>无返回值方法自动放行</td></tr>
+  </table>
+
+  <h3 class="sub">6.3 Stage 3：+ Robolectric（18 用例）</h3>
+  <p>引入 Robolectric 把 Room 放进 JVM in-memory 跑真实 SQL、解析 Compose Color、读取 R 资源。通过系统属性 <code>robolectric.dependency.repo.url</code> 指向阿里云镜像下载 android-all jar。</p>
+  <table class="data">
+    <tr><th>Robolectric API</th><th>用途</th></tr>
+    <tr><td class="mono">@RunWith(RobolectricTestRunner)</td><td>启用 Android Runtime 沙箱</td></tr>
+    <tr><td class="mono">Room.inMemoryDatabaseBuilder</td><td>真正执行 Room 生成的 _Impl SQL</td></tr>
+    <tr><td class="mono">ApplicationProvider.getApplicationContext</td><td>拿 Robolectric 默认 Application</td></tr>
+  </table>
+
+  <h3 class="sub">6.4 三阶段覆盖率趋势（核心数据）</h3>
+  <p>下表为四份独立 JaCoCo 报告的真实数字。注意 Stage 1/2/3 是<strong>各自独立运行</strong>的覆盖率视角，累积行（Cumulative）是三份 .exec 合并后「三阶段一起跑」的整体覆盖。</p>
+  <table class="data">
+    <tr><th>阶段</th><th class="num">用例</th><th class="num">INSTRUCTION</th><th class="num">BRANCH</th><th class="num">LINE</th><th class="num">METHOD</th><th class="num">CLASS</th></tr>
+    <tr><td class="first">Stage 1：JUnit</td><td class="num">117</td><td class="num">35.6%</td><td class="num">29.8%</td><td class="num">36.6%</td><td class="num">27.3%</td><td class="num">21.0%</td></tr>
+    <tr><td class="first">Stage 2：+MockK</td><td class="num">53</td><td class="num">29.8%</td><td class="num">23.6%</td><td class="num">35.7%</td><td class="num">31.0%</td><td class="num">26.7%</td></tr>
+    <tr><td class="first">Stage 3：+Robolectric</td><td class="num">18</td><td class="num">8.4%</td><td class="num">2.2%</td><td class="num">8.6%</td><td class="num">14.1%</td><td class="num">12.5%</td></tr>
+    <tr><td class="first" style="color:#111;font-weight:800">Cumulative（合并）</td><td class="num"><strong>188</strong></td><td class="num"><strong>62.2%</strong></td><td class="num"><strong>53.4%</strong></td><td class="num"><strong>65.1%</strong></td><td class="num"><strong>57.9%</strong></td><td class="num"><strong>49.4%</strong></td></tr>
+  </table>
+
+  <figure class="wide"><img src="../screens/rpt-jacoco-cumulative.png" alt="JaCoCo累积报告"></figure>
+  <figcaption>图 12：JaCoCo 累积覆盖率 HTML 报告。Total 62% 指令 / 53% 分支 / 65% 行。按包看：domain.model 95%、domain.usecase 82%、domain.util 81%、data.repository 66%、ai 63%、data.local.db 76%；ui 包 0%（Compose UI 由 Espresso 覆盖，已从统计排除）。</figcaption>
+
+  <figure class="wide"><img src="../screens/rpt-test-summary.png" alt="测试汇总"></figure>
+  <figcaption>图 13：Gradle testDebugUnitTest 生成的 HTML Test Summary——188 tests，0 failures，100% successful；按包 stage1 117 / stage2 53 / stage3 18 全部通过。</figcaption>
+
+  <div class="note"><strong>测试金字塔解读</strong>：Stage 1 纯 JUnit 一次性拿下 36.6% 行覆盖，说明把「决策权」放在 domain 纯函数里，单测能以极低成本撬动大块覆盖；Stage 2 MockK 把覆盖推进到带依赖、带异步的业务编排层（Repository + ViewModel + AI Client）；Stage 3 Robolectric 独立看仅 8.6% 行，但它解锁了 Room SQL、Compose Color、R 资源等纯 JVM 跑不动的部分，价值密度高。三者合并后行覆盖率达 65.1%。</div>
+  <div class="footer-note">ZhujiNote / Final Report &nbsp;·&nbsp; MT2026 &nbsp;·&nbsp; §6 单元测试与覆盖率</div>
+</section>
+
+<!-- ============ 7. Espresso 集成测试（L08） ============ -->
+<section class="pagebreak">
+  <h2 class="sec">7. Espresso 集成测试（对应 L08）</h2>
+  <p>集成测试位于 <code>androidTest</code>，使用 Espresso 3.6 + Compose UI Test + Hilt Test Runner，在真实 AVD 上验证多组件协作与 UI 交互。共 37 个用例，分布于 5 个测试类。</p>
+  <table class="data">
+    <tr><th>测试类</th><th class="num">用例</th><th>覆盖范围</th></tr>
+    <tr><td class="mono">NavigationE2ETest</td><td class="num">11</td><td>设置/统计/回收站/AI对话/新建笔记 的进入与返回导航</td></tr>
+    <tr><td class="mono">EditorE2ETest</td><td class="num">11</td><td>工具栏/字数/标题输入/正文输入/加粗斜体代码/AI抽屉/返回</td></tr>
+    <tr><td class="mono">NoteFlowE2ETest</td><td class="num">11</td><td>首页标题/新建跳转/创建并入列表/各屏打开/暗色切换</td></tr>
+    <tr><td class="mono">CommonComposeTest</td><td class="num">3</td><td>GradientText / TypingDot 等公共组件渲染</td></tr>
+    <tr><td class="mono">ThemeRendersTest</td><td class="num">3</td><td>主题 ColorScheme 渲染</td></tr>
+    <tr><td class="first" style="color:#111;font-weight:700">合计</td><td class="num"><strong>37</strong></td><td>本地与 CI 双环境 100% 通过</td></tr>
+  </table>
+
+  <h3 class="sub">7.1 Espresso 与 Compose UI Test 三件套</h3>
+  <table class="data">
+    <tr><th>组件</th><th>本项目用法</th></tr>
+    <tr><td class="first">定位</td><td class="mono">onNodeWithText("助记") / onNodeWithContentDescription("新笔记")</td></tr>
+    <tr><td class="first">操作</td><td class="mono">performClick() / performTextInput("...")</td></tr>
+    <tr><td class="first">断言</td><td class="mono">assertExists() / assertIsDisplayed()</td></tr>
+    <tr><td class="first">等待</td><td class="mono">waitUntil { onAllNodesWithText(...).fetchSemanticsNodes().isNotEmpty() }</td></tr>
+  </table>
+
+  <h3 class="sub">7.2 CI 冷启动加固（关键实战）</h3>
+  <p>本项目的 Espresso 用例最初在本地 AVD 全绿，推上 CI 后却有 3 个失败（homeScreenShowsTitle / createNoteAndSeeInList / settingsShowsSaveButton），报 <code>component is not displayed</code>。根因是 <strong>CI 环境差异</strong>：GitHub 模拟器冷启动慢、视口小，首帧未渲染就断言、或目标按钮落在屏幕外。</p>
+  <p>解决采用测试最佳实践，抽出 <code>TestExt.kt</code> 通用扩展，并对全部 E2E 用例加固：</p>
+  <pre>fun ComposeTestRule.awaitText(text: String, substring: Boolean = false, timeoutMillis: Long = 20_000) {
+    waitUntil(timeoutMillis) {
+        onAllNodesWithText(text, substring = substring).fetchSemanticsNodes().isNotEmpty()
+    }
+}
+<span class="c">// @Before 等首页就绪；assertIsDisplayed → assertExists（E2E 只需验证功能可达，不卡视口）</span></pre>
+  <table class="data">
+    <tr><th>加固手段</th><th>解决的问题</th></tr>
+    <tr><td class="first">awaitText / awaitContentDescription</td><td>冷启动首帧未渲染就断言 → waitUntil 等节点出现</td></tr>
+    <tr><td class="first">@Before 等首页就绪</td><td>每个用例起点状态一致</td></tr>
+    <tr><td class="first">assertExists 替代 assertIsDisplayed</td><td>视口外的按钮（如「保存并验证」）仍可断言存在</td></tr>
+    <tr><td class="first">补全 a11y contentDescription</td><td>首页 FAB、Stats/AiChat 返回按钮原缺无障碍标签，既修测试也修真实缺陷</td></tr>
+  </table>
+  <div class="note">加固后本地与 CI 双双 37/37 全绿。CI 日志实录：<code>Starting 37 tests → 4/37 → 10/37 → 22/37 → 33/37 completed (0 failed)</code>。这一过程印证了「集成测试必须在目标 CI 环境跑」的价值——本地侥幸通过不等于 CI 通过。</div>
+  <div class="footer-note">ZhujiNote / Final Report &nbsp;·&nbsp; MT2026 &nbsp;·&nbsp; §7 集成测试</div>
+</section>
+
+<!-- ============ 8. 单元测试 vs 集成测试 ============ -->
+<section class="pagebreak">
+  <h2 class="sec">8. 单元测试与集成测试对比</h2>
+  <table class="data">
+    <tr><th>维度</th><th>单元测试（JUnit/MockK/Robolectric）</th><th>集成测试（Espresso）</th></tr>
+    <tr><td class="first">运行环境</td><td>JVM（本机）/ Robolectric 沙箱</td><td>真实 Android 设备 / 模拟器</td></tr>
+    <tr><td class="first">测试对象</td><td>单个类 / 方法 / 业务编排</td><td>多组件协作（Activity + Compose + Nav + ViewModel）</td></tr>
+    <tr><td class="first">用例数</td><td>188（117 / 53 / 18）</td><td>37</td></tr>
+    <tr><td class="first">速度</td><td>秒级（188 用例 ~15s）</td><td>分钟级（37 用例含模拟器启动）</td></tr>
+    <tr><td class="first">验证重点</td><td>逻辑正确性 + 覆盖率</td><td>UI 交互 + 导航 + 组件集成</td></tr>
+    <tr><td class="first">测试目录</td><td class="mono">src/test/</td><td class="mono">src/androidTest/</td></tr>
+    <tr><td class="first">运行命令</td><td class="mono">gradlew testDebugUnitTest</td><td class="mono">gradlew connectedDebugAndroidTest</td></tr>
+  </table>
+  <p>两者构成测试金字塔：单元测试快而多、覆盖逻辑；集成测试慢而少、验证关键交互。本项目两层共 225 个用例，全部通过。</p>
+</section>
+
+<!-- ============ 9. 持续集成 CI/CD（L09） ============ -->
+<section class="pagebreak">
+  <h2 class="sec">9. 持续集成 CI/CD（对应 L09）</h2>
+  <p>本项目实现 GitHub Actions + Jenkins 双轨 CI。GitHub Actions 工作流 <code>.github/workflows/android-ci.yml</code> 含两个 Job：</p>
+  <table class="data">
+    <tr><th>Job</th><th>触发</th><th>步骤</th></tr>
+    <tr><td class="first">build-test</td><td>push / PR</td><td>setup JDK 21 → assembleDebug → testDebugUnitTest（188）→ JaCoCo 三阶段 → 归档 APK 与报告</td></tr>
+    <tr><td class="first">instrumented-tests</td><td>push</td><td>ReactiveCircus AVD runner（API 34）→ connectedDebugAndroidTest（37 Espresso）</td></tr>
+  </table>
+
+  <h3 class="sub">9.1 CI 关键问题与解决</h3>
+  <table class="data">
+    <tr><th>问题</th><th>现象</th><th>解决</th></tr>
+    <tr><td class="first">插件解析失败</td><td>阿里云镜像找不到 serialization plugin</td><td>settings.gradle.kts 把 gradlePluginPortal() / mavenCentral() 排在阿里云镜像之前</td></tr>
+    <tr><td class="first">JDK 不匹配</td><td>jvmTarget=21 但 CI 用 17</td><td>workflow 改用 temurin JDK 21</td></tr>
+    <tr><td class="first">gradlew 权限</td><td class="mono">Permission denied, exit 126</td><td>Windows 提交丢 Linux +x 位，<code>git update-index --chmod=+x gradlew</code>（100644→100755）+ script 加 chmod 兜底</td></tr>
+    <tr><td class="first">Espresso CI 失败</td><td>3 用例 not displayed</td><td>冷启动加固（waitUntil + assertExists），详见 §7.2</td></tr>
+  </table>
+
+  <h3 class="sub">9.2 CI 全绿实录</h3>
+  <table class="data">
+    <tr><th>维度</th><th>数据</th></tr>
+    <tr><td class="first">仓库</td><td class="mono">github.com/bpgigi/zhuji_note</td></tr>
+    <tr><td class="first">最终 run</td><td>build-test ✓ success + instrumented-tests ✓ success</td></tr>
+    <tr><td class="first">单元测试</td><td>188 / 188 通过</td></tr>
+    <tr><td class="first">集成测试</td><td>37 / 37 通过（CI 模拟器实跑 0 failed）</td></tr>
+    <tr><td class="first">Jenkins</td><td>Jenkinsfile 定义 5 阶段流水线（checkout → build → unit test → coverage → archive）</td></tr>
+  </table>
+  <div class="note">CI 历经多轮迭代才彻底转绿：先修插件解析与 JDK，再修 gradlew 权限让 instrumented-tests 首次真跑，最后修 3 个 Espresso 用例的冷启动脆弱性。这一闭环正是 L09「持续集成尽早发现集成问题」理念的真实体现。</div>
+  <div class="footer-note">ZhujiNote / Final Report &nbsp;·&nbsp; MT2026 &nbsp;·&nbsp; §8-9 对比与 CI/CD</div>
+</section>
+
+<!-- ============ 10. 数据要点 ============ -->
+<section class="pagebreak">
+  <h2 class="sec">10. 本项目数据要点</h2>
+  <table class="data">
+    <tr><th>维度</th><th>数据</th></tr>
+    <tr><td class="first">主源码量</td><td>5152 行 Kotlin（54 个源文件）</td></tr>
+    <tr><td class="first">测试代码量</td><td>单元 1570 行（22 文件）+ 集成 443 行（8 文件），合计 2013 行</td></tr>
+    <tr><td class="first">测试用例总数</td><td>225 个（单元 188 + 集成 37）</td></tr>
+    <tr><td class="first">三阶段分布</td><td>Stage1 117 / Stage2 53 / Stage3 18</td></tr>
+    <tr><td class="first">测试通过率</td><td>100%（本地 + GitHub Actions CI 双环境）</td></tr>
+    <tr><td class="first">累积覆盖率</td><td>LINE 65.1% / METHOD 57.9% / BRANCH 53.4% / CLASS 49.4% / INSTRUCTION 62.2%</td></tr>
+    <tr><td class="first">AI 能力</td><td>9 类编辑器动作 + 多轮对话，DeepSeek SSE 流式</td></tr>
+    <tr><td class="first">功能模块</td><td>笔记 CRUD / Markdown / FTS4 检索 / 番茄钟 / 写作目标 / 模板 / 统计 / 回收站 / 多选 / 双向链 / 分享 / SAF 备份 / 提醒 / 双主题</td></tr>
+    <tr><td class="first">实测截图</td><td>94 张 AVD 实拍，归档 docs/screens/</td></tr>
+    <tr><td class="first">CI/CD</td><td>GitHub Actions 双 Job 全绿 + Jenkinsfile 五阶段</td></tr>
+    <tr><td class="first">提交历史</td><td>27 次累积提交，里程碑留痕</td></tr>
+    <tr><td class="first">报告路径</td><td class="mono">app/build/reports/coverage/{stage1,stage2,stage3,cumulative}/</td></tr>
+  </table>
+
+  <h3 class="sub">10.1 关键命令速查</h3>
+  <pre>.\gradlew.bat :app:assembleDebug              <span class="c"># 编译 Debug APK</span>
+.\gradlew.bat :app:testDebugUnitTest          <span class="c"># 跑全部 188 单元测试</span>
+.\gradlew.bat :app:jacocoStage1Report         <span class="c"># Stage 1 覆盖率</span>
+.\gradlew.bat :app:jacocoStage2Report         <span class="c"># Stage 2 覆盖率</span>
+.\gradlew.bat :app:jacocoStage3Report         <span class="c"># Stage 3 覆盖率</span>
+.\gradlew.bat :app:jacocoCumulativeReport     <span class="c"># 合并三阶段 → 累积报告</span>
+.\gradlew.bat :app:connectedDebugAndroidTest  <span class="c"># 跑 37 Espresso 集成测试（需 AVD）</span></pre>
+</section>
+
+<!-- ============ 11. 结论 ============ -->
+<section class="pagebreak">
+  <h2 class="sec">11. 结论</h2>
+  <p>本次大作业在一个 <strong>5152 行、含 Hilt + Room(FTS4) + DataStore + DeepSeek + Compose</strong> 的真实 Android 工程上，系统性地落地了 MT2026 课程 L02–L09 的全部测试能力：</p>
+  <ul>
+    <li><strong>开发环境（L02）</strong>：JDK 21 + Android Studio + SDK + AEHD 加速的 AVD，全工具链 D 盘部署。</li>
+    <li><strong>APK 构建（L03）</strong>：Gradle Wrapper assembleDebug 产出 APK 并装入模拟器运行。</li>
+    <li><strong>GUI 测试（L04）</strong>：94 张 AVD 实拍覆盖全部功能路径，含 AI 九大动作与亮暗双主题。</li>
+    <li><strong>单元测试三阶段（L05–L07）</strong>：JUnit 117 + MockK 53 + Robolectric 18，JaCoCo 独立 .exec 精确量化每阶段覆盖增量，累积行覆盖 65.1%。</li>
+    <li><strong>集成测试（L08）</strong>：Espresso + Compose UI Test 37 用例，并通过冷启动加固让本地与 CI 双环境全绿。</li>
+    <li><strong>持续集成（L09）</strong>：GitHub Actions 双 Job + Jenkinsfile 五阶段，历经多轮迭代彻底转绿。</li>
+  </ul>
+  <p>三个阶段的覆盖率提升清晰揭示了测试金字塔的现实意义：Stage 1 纯 JUnit 以极低成本撬动 domain 层大块覆盖；Stage 2 MockK 把覆盖推进到带依赖、带异步的业务层，是从「花拳绣腿」到「业务可信」的关键一跃；Stage 3 Robolectric 投入虽小却解锁了 Android Framework 范畴。三者合并行覆盖率达 65.1%，方法覆盖 57.9%。</p>
+  <p>未纳入 JaCoCo 统计的 <code>ui</code> 包（Compose 渲染函数）由 37 个 Espresso 集成测试在真机上验证——这正是单元测试与集成测试互补、共同构成测试金字塔的体现。整个项目从功能实现到测试落地再到 CI 转绿的全过程，完整演绎了现代 Android 工程的质量保障闭环。</p>
+  <div class="footer-note">ZhujiNote / Final Report &nbsp;·&nbsp; MT2026 &nbsp;·&nbsp; §10-11 数据与结论 &nbsp;·&nbsp; 完</div>
+</section>
+
+</body>
+</html>
