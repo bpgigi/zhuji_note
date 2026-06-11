@@ -13,6 +13,8 @@
 
 > 配套文档：[项目目标与分工](docs/GOAL.md) · [操作与汇报教程](docs/GUIDE.md)
 
+> APKTool 随堂练习：[解包、资源修改、重打包、签名与验证](docs/APKTOOL_LAB.md)
+
 ## 一、项目定位
 
 ZhujiNote 是为 **MT2026 移动应用测试** 课程大作业设计的 Android 应用，配套实现 L02-L09 全部教学内容：

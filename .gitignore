@@ -26,6 +26,12 @@ local.properties
 *.log
 node_modules/
 
+# APKTool lab local tools, decoded sources, and generated artifacts
+/.apktool-tools/
+/.apktool-work/
+/dist/
+/.work/
+
 # 参考项目源码(仅本地分析,不入库)
 refs/*/
 !refs/README.md
